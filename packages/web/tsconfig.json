@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES2022", "module": "ESNext", "moduleResolution": "Bundler",
+    "strict": true, "noUncheckedIndexedAccess": true, "skipLibCheck": true,
+    "allowImportingTsExtensions": true, "noEmit": true, "verbatimModuleSyntax": false,
+    "types": ["svelte", "vite/client"],
+    "paths": { "@tandem/engine": ["../engine/src/index.ts"], "@tandem/server": ["../server/src/index.ts"] }
+  },
+  "include": ["src", "test", "*.ts"]
+}

@@ -1,0 +1,1 @@
+{ "compilerOptions": { "target":"ES2022","module":"ESNext","moduleResolution":"Bundler","strict":true,"noUncheckedIndexedAccess":true,"skipLibCheck":true,"types":["node"],"allowImportingTsExtensions":true,"noEmit":true,"paths":{"@tandem/engine":["../engine/src/index.ts"]} }, "include":["src","test"] }

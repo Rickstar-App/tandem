@@ -1,0 +1,22 @@
+{
+  "name": "tandem",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "npm run test -w @tandem/engine && npm run test -w @tandem/server",
+    "test:engine": "npm run test -w @tandem/engine",
+    "test:server": "npm run test -w @tandem/server",
+    "test:e2e": "playwright test",
+    "typecheck": "npm run typecheck -w @tandem/engine && npm run typecheck -w @tandem/server && npm run check -w @tandem/web",
+    "build": "npm run build -w @tandem/web",
+    "dev:server": "TANDEM_START=1 node packages/server/src/node-main.ts",
+    "dev:web": "npm run dev -w @tandem/web",
+    "start": "npm run build && TANDEM_START=1 node packages/server/src/node-main.ts"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.64.0"
+  }
+}

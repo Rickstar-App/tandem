@@ -1,0 +1,21 @@
+name = "tandem"
+main = "src/durable-object.ts"
+compatibility_date = "2026-09-01"
+
+[assets]
+directory = "../web/dist"
+not_found_handling = "single-page-application"
+binding = "ASSETS"
+
+[[durable_objects.bindings]]
+name = "TANDEM_ROOM"
+class_name = "TandemRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["TandemRoom"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tandem"
+database_id = "set-me-with-wrangler-d1-create-tandem"

@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tandem game screen preview</title>
+<link rel="stylesheet" href="./tokens.css">
+<style>
+* { box-sizing: border-box; }
+body { margin: 0; }
+.bar { display: flex; align-items: baseline; justify-content: space-between; padding: var(--s-3) var(--s-4); border-bottom: 1px solid var(--rule); }
+.wordmark { font: 700 var(--fs-title)/1 var(--font-title); margin: 0; }
+.bar .meta { color: var(--ink-2); font-size: var(--fs-small); }
+.stage { max-width: 1180px; margin: 0 auto; padding: var(--s-4); display: grid; grid-template-columns: 1fr; gap: var(--s-4); }
+.pair { display: grid; grid-template-columns: minmax(0,1fr) var(--spine-w) minmax(0,1fr); align-items: start; }
+.spine { position: relative; align-self: stretch; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+.spine::before { content:""; position:absolute; top:0; bottom:0; width:1px; background: var(--rule); }
+.spine .piece { position: relative; z-index: 1; width: 30px; height: 30px; background: var(--page); padding: 2px 0; }
+.spine small { position: relative; z-index: 1; background: var(--page); color: var(--ink-2); font-size: var(--fs-small); padding: 2px 0; }
+.strip { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--s-3); padding: var(--s-2) 0; min-height: 56px; }
+.who { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
+.badge { flex: none; width: 24px; height: 24px; display: grid; place-items: center; background: var(--acc); color: var(--on-accent); border-radius: var(--radius); font-weight: 800; font-size: var(--fs-small); }
+.name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.seat { color: var(--ink-2); font-size: var(--fs-small); }
+.reserve { display: flex; align-items: center; gap: 2px; min-height: 32px; flex-wrap: wrap; }
+.reserve .it { position: relative; width: 30px; height: 30px; }
+.reserve .it img { width: 30px; height: 30px; display: block; }
+.reserve .it b { position: absolute; right: -2px; bottom: -2px; font-size: 11px; font-weight: 800; background: var(--ink); color: var(--page); border-radius: 8px; min-width: 15px; height: 15px; display: grid; place-items: center; padding: 0 3px; }
+.reserve.opp .it, .reserve.opp .it img { width: 24px; height: 24px; }
+.clock { padding: var(--s-1) var(--s-2); border-radius: var(--radius); }
+.clock.run { background: var(--clock-run-bg); color: var(--clock-run-ink); }
+.clock.low { background: var(--alert); color: var(--on-alert); font-weight: var(--fw-clock-low); }
+.grid { display: grid; grid-template-columns: repeat(8, minmax(0,1fr)); grid-template-rows: repeat(8, minmax(0,1fr)); aspect-ratio: 1; border: 1px solid var(--rule); position: relative; }
+.sq { position: relative; display: grid; place-items: center; }
+.sq.l { background: var(--sqL); } .sq.d { background: var(--sqD); }
+.sq.last::after { content:""; position:absolute; inset:0; background: var(--last-move); }
+.sq.chk { box-shadow: inset 0 0 0 3px var(--alert); }
+.sq img { width: 92%; height: 92%; position: relative; z-index: 1; }
+.sq .co { position:absolute; font-size: 10px; font-weight: 800; color: var(--coord); z-index: 2; }
+.sq .co.r { top: 2px; left: 3px; } .sq .co.f { bottom: 1px; right: 3px; }
+.A { --acc: var(--a-accent); --sqL: var(--a-sq-light); --sqD: var(--a-sq-dark); --coord: var(--a-accent); }
+.B { --acc: var(--b-accent); --sqL: var(--b-sq-light); --sqD: var(--b-sq-dark); --coord: var(--b-accent); }
+.sq.d .co { color: #fff; } .sq.l .co { color: var(--coord); }
+.status { display: flex; gap: var(--s-4); color: var(--ink-2); font-size: var(--fs-small); border-top: 1px solid var(--rule); padding-top: var(--s-3); }
+.status b { color: var(--ink); }
+.status .warn { color: var(--alert); font-weight: 800; }
+@media (max-width: 640px) { .pair { grid-template-columns: 1fr; } .spine { height: 40px; flex-direction: row; } .spine::before { top:50%; bottom:auto; left:0; right:0; width:auto; height:1px; } }
+</style>
+</head>
+<body>
+<div class="bar"><h1 class="wordmark">Tandem</h1><span class="meta">Table k7f3q · 5+0 · you are Team White-A</span></div>
+<div class="stage" id="stage"></div>
+<script>
+const img = (p) => `./pieces/${p === p.toUpperCase() ? 'w' : 'b'}${p.toLowerCase()}.svg`;
+function fen2grid(fen, flip) {
+  const rows = fen.split('/').map(r => { const o = []; for (const ch of r) { if (/\d/.test(ch)) for (let i = 0; i < +ch; i++) o.push(''); else o.push(ch); } return o; });
+  return flip ? rows.slice().reverse().map(r => r.slice().reverse()) : rows;
+}
+function board(fen, flip, last, chk) {
+  const g = fen2grid(fen, flip); let h = '<div class="grid">';
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+    const p = g[r][c], light = (r + c) % 2 === 0, file = flip ? 7 - c : c, rank = flip ? r : 7 - r;
+    const key = file + ',' + rank;
+    h += `<div class="sq ${light ? 'l' : 'd'}${last.includes(key) ? ' last' : ''}${chk === key ? ' chk' : ''}">` +
+      (c === 0 ? `<span class="co r">${rank + 1}</span>` : '') + (r === 7 ? `<span class="co f">${'abcdefgh'[file]}</span>` : '') +
+      (p ? `<img alt="" src="${img(p)}">` : '') + '</div>';
+  }
+  return h + '</div>';
+}
+const reserve = (items, opp) => `<div class="reserve ${opp ? 'opp' : ''}">${items.map(([p, n]) => `<span class="it"><img alt="" src="${img(p)}">${n > 1 ? `<b>${n}</b>` : ''}</span>`).join('')}</div>`;
+const strip = (letter, name, seat, time, cls, res, opp) => `<div class="strip"><div class="who"><span class="badge">${letter}</span><span class="name">${name}</span><span class="seat">${seat}</span></div>${reserve(res, opp)}<div class="clock ${cls}">${time}</div></div>`;
+// Viewer = Team White-A: White on A (bottom), Black on B (bottom, board flipped).
+const A = 'r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQ1RK1';
+const B = 'rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R';
+document.getElementById('stage').innerHTML = `
+<div class="pair">
+  <div class="A">${strip('A', 'Mara', 'Black', '3:41', '', [['p', 2], ['n', 1]], true)}${board(A, false, ['4,3', '4,4'], '')}${strip('A', 'You', 'White', '2:58', 'run', [['B', 1], ['P', 1]], false)}</div>
+  <div class="spine"><img class="piece" alt="" src="./pieces/bn.svg"><small>to B</small></div>
+  <div class="B">${strip('B', 'Mara', 'White', '3:12', '', [['P', 3]], true)}${board(B, true, ['3,3', '3,4'], '')}${strip('B', 'You', 'Black', '9.4', 'low', [['n', 1]], false)}</div>
+</div>
+<div class="status"><span><b>Board A:</b> Black to move</span><span><b>Board B:</b> <span class="warn">your move, 9.4 s</span></span></div>`;
+</script>
+</body>
+</html>

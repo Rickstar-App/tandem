@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tandem style tiles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;600;800&family=Young+Serif&family=Bricolage+Grotesque:wght@400;700;800&family=Newsreader:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root { --gutter: 16px; }
+* { box-sizing: border-box; }
+body { margin: 0; font: 15px/1.45 "Schibsted Grotesk", system-ui, sans-serif; background: #ECE6D8; color: #1E1B16; }
+header.top { padding: 20px var(--gutter) 8px; max-width: 1280px; margin: 0 auto; }
+header.top h1 { font: 400 28px "Young Serif", Georgia, serif; margin: 0 0 6px; }
+header.top p { margin: 0; max-width: 70ch; color: #5A5444; }
+main { max-width: 1280px; margin: 0 auto; padding: 8px var(--gutter) 48px; display: grid; gap: 28px; }
+.tile { border-top: 2px solid currentColor; padding-top: 12px; }
+.tile > h2 { font-size: 17px; margin: 0 0 2px; }
+.tile > .why { margin: 0 0 14px; max-width: 80ch; opacity: .8; }
+.stage { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0; padding: 20px; background: var(--page); color: var(--ink); font-family: var(--ui); }
+.pair { display: grid; grid-template-columns: 1fr 44px 1fr; gap: 0; align-items: start; max-width: 860px; }
+.spine { align-self: stretch; display: flex; flex-direction: column; justify-content: center; align-items: center; position: relative; }
+.spine::before { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--rule); }
+.spine .xfer { position: relative; z-index: 1; background: var(--page); padding: 6px 0; font-size: 26px; color: var(--ink); line-height: 1; }
+.spine small { position: relative; z-index: 1; background: var(--page); font-size: 10px; color: var(--ink2); letter-spacing: .02em; padding: 2px 0; }
+.board-wrap { min-width: 0; }
+.strip { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 2px; }
+.strip .who { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+.strip .badge { font-weight: 800; width: 24px; height: 24px; display: grid; place-items: center; background: var(--acc); color: var(--accInk); border-radius: var(--r); font-size: 13px; flex: none; }
+.strip .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.clock { font-family: var(--num); font-variant-numeric: tabular-nums; font-size: 34px; font-weight: var(--numW); line-height: 1; letter-spacing: -.01em; padding: 4px 8px; border-radius: var(--r); background: transparent; }
+.clock.run { background: var(--runBg); color: var(--runInk); }
+.clock.low { background: var(--lowBg); color: var(--lowInk); font-weight: 800; }
+.reserve { display: flex; gap: 2px; min-height: 30px; align-items: center; font-size: 22px; }
+.reserve span { display: inline-flex; align-items: baseline; }
+.reserve sub { font: 600 10px var(--ui); margin-left: 1px; color: var(--ink2); }
+.grid { display: grid; grid-template-columns: repeat(8, 1fr); aspect-ratio: 1; border: 1px solid var(--rule); }
+.sq { display: grid; place-items: center; font-size: clamp(18px, 3.4vw, 36px); line-height: 1; position: relative; }
+.sq.l { background: var(--sqL); } .sq.d { background: var(--sqD); }
+.sq.last { box-shadow: inset 0 0 0 100px var(--hi); }
+.sq.chk { box-shadow: inset 0 0 0 3px var(--alert); }
+.w { color: #fff; text-shadow: 0 0 1px #000, 0 0 1px #000, 0 1px 0 #000, 1px 0 0 #000, -1px 0 0 #000, 0 -1px 0 #000; }
+.b { color: #111; }
+.note { padding: 14px 20px; font-size: 13px; background: color-mix(in srgb, var(--page) 90%, #000); color: var(--ink2); font-family: var(--ui); }
+.note b { color: var(--ink); }
+.swatches { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 20px; background: var(--page); font: 11px var(--ui); color: var(--ink2); }
+.swatches i { display: inline-flex; align-items: center; gap: 4px; font-style: normal; }
+.swatches i::before { content: ""; width: 14px; height: 14px; background: var(--c); border: 1px solid #0003; }
+[data-t="club"] { --page:#ECE6D8; --ink:#1E1B16; --ink2:#5A5444; --rule:#CFC5AE; --ui:"Schibsted Grotesk",system-ui,sans-serif; --num:"Schibsted Grotesk",system-ui,sans-serif; --numW:600; --r:2px; --runBg:#1E1B16; --runInk:#ECE6D8; --lowBg:#C2410C; --lowInk:#fff; --hi:#E8C54733; --alert:#C2410C; }
+[data-t="club"] .A { --acc:#B5482F; --accInk:#fff; --sqL:#F0E3C4; --sqD:#C58A5F; }
+[data-t="club"] .B { --acc:#1F5A63; --accInk:#fff; --sqL:#DDE7E2; --sqD:#6D9696; }
+[data-t="ledger"] { --page:#F6F6F1; --ink:#101010; --ink2:#565656; --rule:#101010; --ui:"Bricolage Grotesque",system-ui,sans-serif; --num:"Bricolage Grotesque",system-ui,sans-serif; --numW:700; --r:0; --runBg:#101010; --runInk:#F6F6F1; --lowBg:#FFD60A; --lowInk:#101010; --hi:#FFD60A55; --alert:#E5322D; }
+[data-t="ledger"] .A { --acc:#101010; --accInk:#F6F6F1; --sqL:#FFFFFF; --sqD:#B9B9AE; }
+[data-t="ledger"] .B { --acc:#E5322D; --accInk:#fff; --sqL:#FFFFFF; --sqD:#E2B7B0; }
+[data-t="library"] { --page:#E7ECE4; --ink:#17251C; --ink2:#4B5E52; --rule:#B7C4B8; --ui:"Newsreader",Georgia,serif; --num:"Newsreader",Georgia,serif; --numW:600; --r:6px; --runBg:#17251C; --runInk:#E7ECE4; --lowBg:#8A2B1A; --lowInk:#fff; --hi:#F2D16B55; --alert:#8A2B1A; }
+[data-t="library"] .A { --acc:#3F6B4C; --accInk:#fff; --sqL:#EFEBD8; --sqD:#8FAE8B; }
+[data-t="library"] .B { --acc:#6B4A8A; --accInk:#fff; --sqL:#EDE8F0; --sqD:#A08DB5; }
+@media (max-width: 640px) { .pair { grid-template-columns: 1fr; } .spine { height: 40px; flex-direction: row; } .spine::before { top: 50%; bottom: auto; left: 0; right: 0; width: auto; height: 1px; } .clock { font-size: 28px; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>Gate 1: three directions</h1>
+  <p>Same screen, same position, three decided systems. Pieces are Unicode placeholders (the real set is chosen at M0). Board A is the left board, B the right. The clocks, reserves and the spine are the load-bearing parts; everything else is quiet. Pick one, or tell me what to mix.</p>
+</header>
+<main id="root"></main>
+
+<script>
+const PIECES = {K:"♔",Q:"♕",R:"♖",B:"♗",N:"♘",P:"♙",k:"♚",q:"♛",r:"♜",b:"♝",n:"♞",p:"♟"};
+function fen2grid(fen, flip) {
+  const rows = fen.split("/").map(r => { const out=[]; for (const ch of r) { if (/\d/.test(ch)) for (let i=0;i<+ch;i++) out.push(""); else out.push(ch); } return out; });
+  return flip ? rows.slice().reverse().map(r => r.slice().reverse()) : rows;
+}
+function board(fen, flip, last, chk) {
+  const g = fen2grid(fen, flip); let h = '<div class="grid">';
+  for (let r=0;r<8;r++) for (let c=0;c<8;c++) {
+    const p = g[r][c]; const light = (r+c)%2===0;
+    const key = flip ? `${7-r}${7-c}` : `${r}${c}`;
+    const cls = `sq ${light?"l":"d"}${last.includes(key)?" last":""}${chk===key?" chk":""}`;
+    h += `<div class="${cls}">${p?`<span class="${p===p.toUpperCase()?"w":"b"}">${PIECES[p]}</span>`:""}</div>`;
+  }
+  return h + "</div>";
+}
+function reserve(items){ return `<div class="reserve">${items.map(([p,n])=>`<span class="${p===p.toUpperCase()?"w":"b"}">${PIECES[p]}${n>1?`<sub>${n}</sub>`:""}</span>`).join("")}</div>`; }
+function strip(letter, name, time, cls, res){ return `<div class="strip"><div class="who"><span class="badge">${letter}</span><span class="name">${name}</span></div>${reserve(res)}<div class="clock ${cls}">${time}</div></div>`; }
+const A = "r1bq1rk1/ppp2ppp/2np1n2/2b1p3/2B1P3/2NP1N2/PPP2PPP/R1BQ1RK1";
+const B = "rnbqkb1r/pp2pppp/3p1n2/8/3NP3/8/PPP2PPP/RNBQKB1R";
+function pair(){
+  return `<div class="pair">
+    <div class="board-wrap A">${strip("A","Mara · Black","3:41","",[["P",2],["N",1]])}${board(A,false,["52","43"],"")}${strip("A","You · White","2:58","run",[["b",1],["p",1]])}</div>
+    <div class="spine"><span class="xfer">♞</span><small>to B</small></div>
+    <div class="board-wrap B">${strip("B","You · Black","0:47","low",[["N",1]])}${board(B,true,["34","44"],"")}${strip("B","Mara · White","3:12","",[["p",3]])}</div>
+  </div>`;
+}
+const T = [
+ ["club","Recommended — Club table","Warm paper ground, matte flat panels, square-ish corners. Boards are the only saturated objects; A is clay, B is deep teal, each also marked by a letter badge. Schibsted Grotesk throughout with tabular numerals; Young Serif for page titles. Low time swaps the clock ground to a solid colour: no pulsing.",["#ECE6D8","#1E1B16","#B5482F","#1F5A63","#C2410C"]],
+ ["ledger","Alternate — Ledger","Stark off-white and black, hard 1px rules, zero radius, a loud single hue per board (black vs. red) and a yellow low-time block. Bricolage Grotesque. More graphic and editorial; riskier on long sessions because of the contrast.",["#F6F6F1","#101010","#E5322D","#FFD60A"]],
+ ["library","Alternate — Reading room","Sage ground, serif UI (Newsreader), green and plum boards. Calmest and most unlike the previous projects; the serif clocks are the least readable at a glance, so it needs size compensation.",["#E7ECE4","#17251C","#3F6B4C","#6B4A8A","#8A2B1A"]]
+];
+document.getElementById("root").innerHTML = T.map(([id,title,why,sw]) => `
+ <section class="tile" data-t="${id}">
+   <h2>${title}</h2><p class="why">${why}</p>
+   <div class="stage">${pair()}</div>
+   <div class="swatches">${sw.map(c=>`<i style="--c:${c}">${c}</i>`).join("")}</div>
+   <div class="note"><b>Reads as:</b> board A and B differ by colour, letter and position. The ♞ on the spine is the capture-transfer moment (animated in the product).</div>
+ </section>`).join("");
+</script>
+</body>
+</html>

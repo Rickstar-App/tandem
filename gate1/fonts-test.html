@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>font test</title>
+<link rel="stylesheet" href="../design/fonts/fonts.css">
+<style>
+body{margin:0;padding:16px;max-width:1100px;background:#ECE6D8;color:#1E1B16;font:15px/1.4 system-ui}
+.row{display:grid;grid-template-columns:200px 1fr 1fr;gap:16px;align-items:center;border-top:1px solid #CFC5AE;padding:10px 0}
+.clk{font-size:40px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1}
+.ui{font-size:15px}
+.t{font-size:30px}
+</style></head><body>
+<div id="out"></div>
+<script>
+const sans=[["Archivo","'Archivo'"],["Atkinson Hyperlegible Next","'Atkinson Hyperlegible Next'"],["Familjen Grotesk","'Familjen Grotesk'"],["Hanken Grotesk","'Hanken Grotesk'"]];
+const serif=[["Literata","'Literata'"],["Gloock","'Gloock'"],["Zilla Slab","'Zilla Slab'"],["Source Serif 4","'Source Serif 4'"]];
+const o=document.getElementById('out');
+o.innerHTML="<h3>Sans: clock numerals + UI</h3>"+sans.map(([n,f])=>`<div class="row"><b>${n}</b><div class="clk" style="font-family:${f}">4:44 0:08 1:11 3:59</div><div class="ui" style="font-family:${f}">Mara · Black — Board B: White to move. Drop N@f3, O-O, e8=Q+</div></div>`).join("")+
+"<h3>Serif/title</h3>"+serif.map(([n,f])=>`<div class="row"><b>${n}</b><div class="t" style="font-family:${f}">Set a table</div><div class="t" style="font-family:${f}">Black wins on Board B</div></div>`).join("");
+document.fonts.ready.then(async()=>{
+  const res={};
+  for(const [n,f] of sans){
+    await document.fonts.load(`600 40px ${f}`);
+    const m=(t)=>{const s=document.createElement('span');s.style.cssText=`font:600 40px ${f};font-variant-numeric:tabular-nums;position:absolute;visibility:hidden;white-space:pre`;s.textContent=t;document.body.appendChild(s);const w=s.getBoundingClientRect().width;s.remove();return w};
+    const p=(t)=>{const s=document.createElement('span');s.style.cssText=`font:600 40px ${f};font-variant-numeric:proportional-nums;position:absolute;visibility:hidden;white-space:pre`;s.textContent=t;document.body.appendChild(s);const w=s.getBoundingClientRect().width;s.remove();return w};
+    res[n]={tabular_1111:m("1111"),tabular_0000:m("0000"),prop_1111:p("1111"),prop_0000:p("0000"),loaded:document.fonts.check(`600 40px ${f}`)};
+  }
+  window.__res=res; document.title="done";
+});
+</script></body></html>

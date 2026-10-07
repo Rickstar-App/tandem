@@ -1,0 +1,51 @@
+/* Tandem design tokens. Source of truth: DESIGN.md. Do not introduce values that are not here. */
+@import url("./fonts/fonts.css");
+
+:root {
+  /* Surfaces and ink (light only in v1) */
+  --page:   #ECE6D8;
+  --panel:  #E3DBC9;
+  --rule:   #CFC5AE;
+  --ink:    #1E1B16;
+  --ink-2:  #5A5444;
+
+  /* Board identity. Each board = colour + letter badge + fixed position (A left, B right). */
+  --a-accent: #B5482F;  --a-sq-light: #F0E3C4;  --a-sq-dark: #BA7C52;
+  --b-accent: #1F5A63;  --b-sq-light: #DDE7E2;  --b-sq-dark: #6D9696;
+  --on-accent: #FFFFFF;
+
+  /* State colours. Used only for state, never decoration. */
+  --alert:        #C2410C;   /* check, pending, low time */
+  --on-alert:     #FFFFFF;
+  --clock-run-bg: #1E1B16;   /* the side whose clock is running */
+  --clock-run-ink:#ECE6D8;
+  --last-move:    rgba(232, 197, 71, .38);
+
+  /* Type */
+  --font-ui:    "Atkinson Hyperlegible Next", system-ui, sans-serif;  /* UI, body, clocks */
+  --font-title: "Zilla Slab", Georgia, serif;                          /* wordmark, page titles, result line only */
+  --fs-clock:   2.25rem;   /* 36px; 1.75rem (28px) under 640px */
+  --fs-title:   1.75rem;
+  --fs-body:    0.9375rem; /* 15px */
+  --fs-small:   0.8125rem; /* 13px; minimum text size */
+  --fw-clock:   600;
+  --fw-clock-low: 800;
+
+  /* Space (4px base) and shape */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px; --s-7: 48px;
+  --radius: 2px;          /* controls, badges, clocks. Boards and panels are square. */
+  --spine-w: 44px;
+
+  /* Motion */
+  --t-move: 120ms;
+  --t-transfer: 420ms;
+  --ease-out: cubic-bezier(.2, .7, .2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-move: 0ms; --t-transfer: 0ms; }
+}
+
+html { background: var(--page); color: var(--ink); font: var(--fs-body)/1.45 var(--font-ui); }
+.clock { font-family: var(--font-ui); font-weight: var(--fw-clock); font-variant-numeric: tabular-nums; font-size: var(--fs-clock); line-height: 1; letter-spacing: -.01em; }
+@media (max-width: 640px) { :root { --fs-clock: 1.75rem; } }

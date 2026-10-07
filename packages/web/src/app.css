@@ -1,0 +1,116 @@
+/* Tandem global styles. Every value comes from the design tokens (DESIGN.md); nothing new here. */
+@import url("/fonts/fonts.css");
+
+:root {
+  --page: #ECE6D8;
+  --panel: #E3DBC9;
+  --rule: #CFC5AE;
+  --ink: #1E1B16;
+  --ink-2: #5A5444;
+
+  --a-accent: #B5482F;  --a-sq-light: #F0E3C4;  --a-sq-dark: #BA7C52;
+  --b-accent: #1F5A63;  --b-sq-light: #DDE7E2;  --b-sq-dark: #6D9696;
+  --on-accent: #FFFFFF;
+
+  --alert: #C2410C;
+  --on-alert: #FFFFFF;
+  --clock-run-bg: #1E1B16;
+  --clock-run-ink: #ECE6D8;
+  --last-move: rgba(232, 197, 71, .38);
+
+  --font-ui: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+  --font-title: "Zilla Slab", Georgia, serif;
+  --fs-clock: 2.25rem;
+  --fs-title: 1.75rem;
+  --fs-body: 0.9375rem;
+  --fs-small: 0.8125rem;
+  --fw-clock: 600;
+  --fw-clock-low: 800;
+
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px; --s-7: 48px;
+  --radius: 2px;
+  --spine-w: 44px;
+
+  --t-move: 120ms;
+  --t-transfer: 420ms;
+  --ease-out: cubic-bezier(.2, .7, .2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --t-move: 0ms; --t-transfer: 0ms; }
+  *, *::before, *::after { animation-duration: 0ms !important; transition-duration: 0ms !important; }
+}
+@media (max-width: 640px) { :root { --fs-clock: 1.75rem; } }
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+html {
+  background: var(--page);
+  color: var(--ink);
+  font: var(--fs-body)/1.45 var(--font-ui);
+  -webkit-text-size-adjust: 100%;
+}
+body { min-height: 100dvh; }
+
+h1, h2, h3 { font-family: var(--font-title); font-weight: 700; line-height: 1.15; margin: 0 0 var(--s-3); }
+h1 { font-size: var(--fs-title); }
+h2 { font-size: 1.25rem; }
+h3 { font-size: 1.0625rem; }
+p { margin: 0 0 var(--s-3); }
+a { color: var(--ink); text-underline-offset: 2px; }
+a:hover { color: var(--alert); }
+
+:where(button, input, select, textarea) { font: inherit; color: inherit; }
+
+button {
+  background: var(--ink);
+  color: var(--page);
+  border: 1px solid var(--ink);
+  border-radius: var(--radius);
+  padding: var(--s-2) var(--s-4);
+  min-height: 40px;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { background: #000; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button.quiet {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--rule);
+}
+button.quiet:hover:not(:disabled) { background: var(--panel); color: var(--ink); }
+button.danger[data-armed="true"] { background: var(--alert); border-color: var(--alert); color: var(--on-alert); }
+
+input[type="text"], input[type="number"], select {
+  background: var(--page);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: var(--s-2);
+  min-height: 40px;
+}
+/* Focus rings are ink: --alert is reserved for check, pending and low time (DESIGN.md). */
+input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+
+.rule { border: 0; border-top: 1px solid var(--rule); margin: var(--s-5) 0; }
+.muted { color: var(--ink-2); }
+.small { font-size: var(--fs-small); }
+
+.page { max-width: 1180px; margin: 0 auto; padding: var(--s-4); }
+@media (max-width: 599px) {
+  .page { padding: var(--s-2) var(--s-3) var(--s-3); }
+  button { min-height: 36px; padding: var(--s-1) var(--s-3); }
+}
+.topbar {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--s-3);
+  padding: var(--s-3) var(--s-4); border-bottom: 1px solid var(--rule);
+}
+.wordmark { font: 700 var(--fs-title)/1 var(--font-title); margin: 0; text-decoration: none; }
+.topbar nav { display: flex; gap: var(--s-4); font-size: var(--fs-small); }
