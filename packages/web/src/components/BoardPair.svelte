@@ -63,7 +63,8 @@
   });
 
   // Mirrors the dimension tokens in app.css; the layout maths needs them as numbers.
-  const STRIP = 44, MINI_STRIP = 34, SPINE = 44, STACKED_SPINE = 24, MINI_BOARD = 144, MIN_SQUARE = 34;
+  const STRIP = 44, MINI_STRIP = 34, SPINE = 44, STACKED_SPINE = 24, MIN_SQUARE = 34;
+  const MINI_MIN = 72, MINI_MAX = 144;   // the glance board may shrink, but never vanish
   const stacked = $derived(wrapW > 0 && wrapW < 600);
   /** Stacked: both boards must fit the viewport, so the size comes from the height available. */
   const stackedSize = $derived.by(() => {
@@ -81,13 +82,17 @@
   });
   $effect(() => { focusMode = needsFocus; });
   /**
-   * In focus mode the played board takes everything the mini board and the strips do not need.
-   * The mini board keeps its own clocks and reserve, so nothing is hidden, only shrunk.
+   * In focus mode the board you are playing is sized first, to the 34 px floor where the
+   * viewport allows it, and the glance board takes what is left. A fixed mini board starved
+   * the played board on a short screen: at 360 x 640 it fell to 20 px squares.
    */
+  const forBoards = $derived(avail - 2 * STRIP - 2 * MINI_STRIP - STACKED_SPINE - 28);
   const bigSize = $derived(!stacked ? null
     : needsFocus
-      ? Math.min(wrapW - 16, Math.max(160, avail - 2 * STRIP - 2 * MINI_STRIP - STACKED_SPINE - MINI_BOARD - 28))
+      ? Math.min(wrapW - 16, Math.max(MIN_SQUARE * 8, forBoards - MINI_MAX))
       : stackedSize);
+  const miniSize = $derived(
+    Math.max(MINI_MIN, Math.min(MINI_MAX, forBoards - (bigSize ?? 0))));
 
   function colorFor(b: Board, bottom: boolean): Color {
     const mine = colorOn(viewTeam, b);
@@ -151,7 +156,7 @@
         pendingDrop={reserveSel[b]}
         checkSq={checkSq(b)}
         compact={needsFocus && !big}
-        size={stacked ? (big && bigSize ? `${Math.round(bigSize)}px` : `${MINI_BOARD}px`) : null}
+        size={stacked ? (big && bigSize ? `${Math.round(bigSize)}px` : `${Math.round(miniSize)}px`) : null}
         onAct={(a) => onAct?.(b, a)}
       />
       <Strip
