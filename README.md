@@ -51,8 +51,23 @@ client renders what the server sends and asks for actions; it runs the same engi
 show legal targets and to hold a premove.
 
 `packages/server/src/room.ts` is a state machine that takes `now` as an argument everywhere, so
-every clock rule — flags, the lag credit, simultaneous flags, abort, abandonment — is tested
+every clock rule (flags, the lag credit, simultaneous flags, abort, abandonment) is tested
 deterministically rather than by waiting.
+
+### Where to make a change
+
+| You want to change | Open |
+|---|---|
+| A rule of the game | `packages/engine/src/board.ts` (one board) or `game.ts` (the pair) |
+| How a move is written or parsed | `packages/engine/src/notation.ts` |
+| Clocks, draws, rematch, abandonment | `packages/server/src/room.ts` |
+| A protocol message, rate limit, or reconnect | `packages/server/src/hub.ts` and `types.ts` |
+| An HTTP route or the dev server | `packages/server/src/node-main.ts` |
+| Anything about deploying to Cloudflare | `packages/server/src/durable-object.ts`, `wrangler.toml` |
+| How a board or piece looks | `packages/web/src/components/Board.svelte`, `Piece.svelte` |
+| The two-board layout or the phone fallback | `packages/web/src/components/BoardPair.svelte` |
+| A colour, size, space or duration | `design/tokens.css`, mirrored in `packages/web/src/app.css` |
+| A screen | `packages/web/src/routes/` |
 
 ## Deploying
 
