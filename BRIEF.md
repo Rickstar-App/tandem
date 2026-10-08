@@ -11,6 +11,12 @@ Reading guide: "must" is a requirement; "default" is a decision the user may rev
 
 A website where two people play real-time bughouse chess online, and **each person controls both boards**. Player 1 plays White on Board A and Black on Board B. Player 2 plays Black on A and White on B. A player's two seats are partners, so every piece captured on one board goes straight into *the same player's* reserve on the other board. The game turns on attention, timing and piece flow instead of partner coordination.
 
+**The bet, stated plainly so it can be argued with.** Bughouse is normally a
+four-player game, and its hardest problem is getting four people to the table at the
+same time. This trades the partner for a second board: you lose the shouting and the
+blaming, and you gain a game two people can start in one click. Whether that trade is
+worth making is the premise the whole product rests on, and it is untested.
+
 There is **one clock per board.** Each is a normal two-sided chess clock, so each of the four seats has its own time bank. A player cannot ignore a board without paying for it in time. Rules follow established bughouse rules (§3). The design is the "Club table" direction (§7), chosen to avoid the AI-generic look and our earlier dark, data-dense projects.
 
 ### 0.1 Glossary (words are used only in these senses)
@@ -422,6 +428,21 @@ Scripted full game: create → join → ready → opening moves on both boards �
 8. Hosting: Cloudflare Durable Objects + D1; Node + `ws` on Fly.io is a defined fallback only.
 
 ---
+
+## 14a. Review record
+
+A retrospective `/autoplan` pass (CEO, design, eng, contributor DX) ran against this
+plan and the built code on 2026-10-08. Scores: design 9.1/10, contributor DX 8.7/10.
+Thirteen decisions, three of them taste calls surfaced for the user. Four items
+deferred to `TODOS.md`, the top one being that the Cloudflare adapter has never been
+run and is the only codepath without coverage.
+
+Full audit: `/Users/rickyzhang/.gstack/projects/bughouse/main-autoplan-review-20261008-041410.md`
+
+The pass also found that two premises were doing all the strategic work and neither was
+written down. They are now stated in §0: that one person holding both boards is a
+better game than a partner, and that avoiding four-player coordination is worth losing
+the partner. Both are bets, not facts.
 
 ## 15. References
 - Reference article: Leah Finch, "How to Avoid AI Slop in Web Design: A Beaver Builder AI Masterclass with Paul Lacey", 11 Sep 2026. [`https://www.wpbeaverbuilder.com/avoid-ai-slop-in-web-design/`](https://www.wpbeaverbuilder.com/avoid-ai-slop-in-web-design/)
