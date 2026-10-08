@@ -32,11 +32,12 @@ export class D1Store implements GameStore {
   }
 }
 
+/** Kept in sync with migrations/0001_games.sql, which is what `wrangler d1 migrations apply` runs. */
 export const SCHEMA = `
 CREATE TABLE IF NOT EXISTS games (
-  id TEXT PRIMARY KEY,
+  id       TEXT PRIMARY KEY,
   ended_at INTEGER NOT NULL,
-  body TEXT NOT NULL
+  body     TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS games_ended_at ON games (ended_at);
 `;

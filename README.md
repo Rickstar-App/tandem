@@ -57,8 +57,18 @@ deterministically rather than by waiting.
 ## Deploying
 
 The production target is Cloudflare Workers with one Durable Object per game and D1 for finished
-games. `packages/server/wrangler.toml` is configured; create the database and apply the schema in
-`SCHEMA` from `packages/server/src/durable-object.ts`, then `wrangler deploy`.
+games.
+
+```bash
+cd packages/server
+npx wrangler d1 create tandem          # paste the returned id into wrangler.toml
+npx wrangler d1 migrations apply tandem --remote
+npm run build -w @tandem/web           # wrangler serves packages/web/dist as the SPA
+npx wrangler deploy
+```
+
+Without a D1 binding the game still plays; only the replay route returns 503, which the client
+shows as a plain message.
 
 The Node adapter in `packages/server/src/node-main.ts` runs the same room logic and is what the
 tests and local development use. It is also the defined fallback host if Durable Objects prove
