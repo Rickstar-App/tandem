@@ -80,3 +80,13 @@
 {"ts":"2026-10-08T05:52:41.487Z","cmd":"console","args":"","origin":"http://localhost:8787/","durationMs":0,"status":"ok","hasCookies":false,"mode":"launched"}
 {"ts":"2026-10-08T05:53:44.358Z","cmd":"goto","args":"http://localhost:8787/?cachebust=1791438824","origin":"http://localhost:8787/?cachebust=1791438824","durationMs":18,"status":"ok","hasCookies":false,"mode":"launched"}
 {"ts":"2026-10-08T05:53:47.436Z","cmd":"console","args":"","origin":"http://localhost:8787/?cachebust=1791438824","durationMs":1,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-10-08T07:24:58.357Z","cmd":"goto","args":"http://localhost:8787","origin":"http://localhost:8787/","durationMs":58,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-10-08T07:24:58.450Z","cmd":"snapshot","args":"-i","origin":"http://localhost:8787/","durationMs":35,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-10-08T07:25:06.646Z","cmd":"fill","args":"@e4 QA Tester","origin":"http://localhost:8787/","durationMs":22,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-10-08T07:25:06.718Z","cmd":"click","args":"@e10","origin":"http://localhost:8787/","durationMs":23,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-10-08T07:25:06.794Z","cmd":"click","args":"@e14","origin":"http://localhost:8787/","durationMs":27,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-10-08T07:25:06.882Z","cmd":"click","args":"@e16","origin":"http://localhost:8787/","durationMs":38,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-10-08T07:25:08.958Z","cmd":"url","args":"","origin":"http://localhost:8787/t/w7ztk1wh","durationMs":0,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-10-08T07:25:09.010Z","cmd":"console","args":"--errors","origin":"http://localhost:8787/t/w7ztk1wh","durationMs":2,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-10-08T07:25:09.176Z","cmd":"screenshot","args":".gstack/qa-reports/screenshots/qa-lobby.png","origin":"http://localhost:8787/t/w7ztk1wh","durationMs":117,"status":"ok","hasCookies":false,"mode":"launched"}
+{"ts":"2026-10-08T07:25:09.232Z","cmd":"snapshot","args":"","origin":"http://localhost:8787/t/w7ztk1wh","durationMs":4,"status":"ok","hasCookies":false,"mode":"launched"}

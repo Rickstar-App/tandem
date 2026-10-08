@@ -171,3 +171,34 @@ test('number keys move focus between the boards', async ({ browser }) => {
   await expect(a.locator('section[aria-label="Board A"] .grid')).toBeFocused();
   await ctxA.close(); await ctxB.close();
 });
+
+/**
+ * QA-002: the custom time-control fields were seeded once and then drifted. Picking a preset
+ * left them showing the old numbers, so pressing Set silently reverted the table to whatever
+ * they still held. A control that undoes your last choice is worse than no control.
+ */
+test('the custom time control always shows what the table is actually set to', async ({ page }) => {
+  test.skip(test.info().project.name !== 'desktop');
+  const id = await newTable(page);
+  await page.goto(`/t/${id}`);
+  await expect(page.getByRole('heading', { name: `Table ${id}` })).toBeVisible();
+
+  await page.getByRole('button', { name: '3+2', exact: true }).click();
+  await expect(page.locator('.topbar')).toContainText('3+2');
+  await expect(page.getByLabel('Minutes', { exact: true })).toHaveValue('3');
+  await expect(page.getByLabel('Increment seconds')).toHaveValue('2');
+
+  await page.getByRole('button', { name: '10+0', exact: true }).click();
+  await expect(page.locator('.topbar')).toContainText('10+0');
+  await expect(page.getByLabel('Minutes', { exact: true })).toHaveValue('10');
+
+  // Pressing Set without touching the fields must leave the table exactly as it was.
+  await page.getByRole('button', { name: 'Set' }).click();
+  await expect(page.locator('.topbar')).toContainText('10+0');
+
+  // And a real custom value still applies.
+  await page.getByLabel('Minutes', { exact: true }).fill('7');
+  await page.getByLabel('Increment seconds').fill('3');
+  await page.getByRole('button', { name: 'Set' }).click();
+  await expect(page.locator('.topbar')).toContainText('7+3');
+});

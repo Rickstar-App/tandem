@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import type { ClientMsg, RoomSnapshot, Team, TimeControl } from '@tandem/server';
   import { setName } from '../lib/storage.ts';
 
@@ -43,14 +44,17 @@
     renameTimer = setTimeout(() => send({ type: 'rename', name: v }), 250);
   }
   $effect(() => () => { if (renameTimer) clearTimeout(renameTimer); });
-  // Seeded once from the table's current setting; the inputs own it from then on.
-  let customBase = $state(5);
+  // These mirror the table's current setting, so pressing Set never quietly undoes the preset
+  // you just picked. They follow a real change to the time control and nothing else: syncing on
+  // every snapshot would overwrite digits while you were still typing them.
+  let customBase = $state(0);
   let customInc = $state(0);
-  let seeded = false;
+  let syncedTc = '';
   $effect(() => {
-    if (seeded) return;
-    seeded = true;
-    customBase = room.tc.baseMin; customInc = room.tc.incSec;
+    const key = `${room.tc.baseMin}+${room.tc.incSec}`;
+    if (key === syncedTc) return;
+    syncedTc = key;
+    untrack(() => { customBase = room.tc.baseMin; customInc = room.tc.incSec; });
   });
 </script>
 
@@ -68,7 +72,7 @@
           <h2>{t === 'WA' ? 'White-A' : 'Black-A'}</h2>
           <p class="small muted">{t === 'WA' ? 'White on A, Black on B' : 'Black on A, White on B'}</p>
           <p class="who">
-            {#if p}{p.name}{#if myTeam === t}<span class="small muted"> (you)</span>{/if}
+            {#if p}{p.name}{#if myTeam === t}<span class="small muted you">(you)</span>{/if}
             {:else}<span class="muted">waiting…</span>{/if}
           </p>
           {#if p}
@@ -153,6 +157,8 @@
   .seat.you { border-left: 3px solid var(--ink); }
   .seat h2 { margin-bottom: 2px; }
   .seat .who { margin: var(--s-2) 0 0; font-weight: 800; }
+  /* A margin, not a leading space: the compiler is free to trim whitespace in markup. */
+  .you { margin-left: var(--s-1); font-weight: 400; }
   /* Ready is the primary action; it reads as one by being a filled button, not by colour. */
   .ready { font-weight: 800; }
   .invite { margin-bottom: var(--s-4); }
