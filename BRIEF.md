@@ -155,8 +155,34 @@ The game ends at the first of these events:
 ### 3.8 Illegal input
 The UI never offers illegal actions, and the server rejects them. There is no "illegal move loses" rule (that polices physical play). A rejected action reverts with a short message. A rejection never costs time beyond what elapsed.
 
+### 3.8a Known gap: the pending stall race
+
+These rules permit a position where the correct play is to make no play, and this is
+reachable rather than theoretical (`packages/server/test/stall.test.ts` reaches it).
+
+A side that is pending on one board (§3.4 rule 3) can only obtain a blocking piece by
+capturing on the other board, which requires its turn there. If the opponent holds that
+turn and simply declines to use it, neither position can change again. Both running
+clocks burn at the same rate, so the game is decided entirely by which clock was
+further ahead when the stall began. No chess is played from that point.
+
+§3.9 justifies having no draw rules with "clocks always end the game". In this case the
+clock ending the game *is* the degenerate outcome, not the safeguard against it. The
+abort rule (§3.7.1) does not help: it only covers a game in which nothing was ever
+played.
+
+**Unresolved.** Three candidate rules, none yet chosen:
+1. Adjudicate or draw a board whose position has not changed for N seconds.
+2. Let a pending side claim a draw after N seconds.
+3. Define repetition over the whole state (both positions and all four reserves) and
+   allow a threefold claim. "No authority defines it" is a reason not to copy a rule,
+   not a reason to have none.
+
+Option 2 is the cheapest and the least likely to surprise a player. This is a decision
+about the game rather than about the code, so it is recorded here and left to the user.
+
 ### 3.9 Deliberately absent
-No threefold repetition, no 50-move rule, no insufficient-material draw, no stalemate. Reserves and the other board change the state continually, no standard definition exists, and clocks always end the game. The /rules page says so.
+No threefold repetition, no 50-move rule, no insufficient-material draw, no stalemate. Reserves and the other board change the state continually, no standard definition exists, and clocks always end the game. The /rules page says so. **The reasoning has one hole, recorded in §3.8a:** when neither side can move, the clock ending the game is the degenerate outcome rather than the safeguard.
 
 ### 3.10 Notation and export
 - Standard algebraic notation. Drops: `N@f3`, `P@e4`. Check `+`, mate `#`, promotion `e8=Q`, castling `O-O`/`O-O-O`.
@@ -388,11 +414,11 @@ Scripted full game: create → join → ready → opening moves on both boards �
 |---|---|---|---|
 | M0 | `DESIGN.md`, `design/tokens.css`, fonts, pieces, `THIRD_PARTY.md` | Direction approved, contrast measured, licences recorded | Done 2026-10-07: direction, tokens, fonts, pieces, licences verified |
 | M1 | `engine` package | §9.1 green | **Done 2026-10-07** |
-| M2 | Local two-seat prototype (no network) | One person plays a full game against themself on both boards with all rules and four local clocks, in the Club table design | Next |
-| M3 | Server rooms, clocks, protocol | Two browsers complete a game; §9.2 green | |
-| M4 | Full UI, responsive, keyboard entry, premoves, spine | §9.3 passes at three widths | |
-| M5 | Replay, spectators, export, rematch, /rules | All of §4.1 shipped | |
-| M6 | Hardening | §9 bars met | |
+| M2 | Local two-seat prototype (no network) | One person plays a full game against themself on both boards | Folded into M3: the server was built first and the two-browser path covers it. **Done 2026-10-07** |
+| M3 | Server rooms, clocks, protocol | Two browsers complete a game; §9.2 green | **Done 2026-10-07** |
+| M4 | Full UI, responsive, keyboard entry, premoves, spine | §9.3 passes at three widths | **Done 2026-10-07** |
+| M5 | Replay, spectators, export, rematch, /rules | All of §4.1 shipped | **Done 2026-10-07** |
+| M6 | Hardening | §9 bars met | Accessibility, performance and licences done 2026-10-08. **The Cloudflare adapter has never been run**; see `TODOS.md` |
 
 ---
 
@@ -400,8 +426,8 @@ Scripted full game: create → join → ready → opening moves on both boards �
 - **Gate 0:** brief. Reviewed and revised at the user's direction; final export requested 2026-10-07.
 - **Gate 1:** visual direction. **Closed 2026-10-07: Club table.**
 - **Gate 2:** rules engine green. **Closed 2026-10-07.**
-- **Gate 3:** the user plays one full game on the M2 prototype, then the design is reviewed against §10 before polish begins.
-- **Gate 4:** pre-ship review: §9 bars met, §10 checklist clean, `THIRD_PARTY.md` complete.
+- **Gate 3: OPEN.** The user plays one full game against a second human. Nothing in this project has closed it, and no machine can: 81 engine tests, 58 server tests and 30 scripted browser checks say the rules are right and the screens work. None of them say the game is any good. Until this gate closes, §0's bet is untested.
+- **Gate 4: partly met.** §9 bars measured and met, §10 checklist clean, `THIRD_PARTY.md` complete and verified. Outstanding: the deploy path has never been exercised (`TODOS.md` P1).
 
 ---
 
