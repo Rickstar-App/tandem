@@ -45,3 +45,51 @@ test('the first screen is small and paints quickly', async ({ page }, info) => {
   expect(gzipped).toBeLessThanOrEqual(150 * 1024);
   expect(lcp).toBeLessThan(1500);
 });
+
+/**
+ * A preload that names a file the page never uses costs every visitor a download for nothing.
+ * It happened once: importing the font CSS through the bundler made a second, hashed copy of
+ * every face, so the preload pointed at a file the stylesheet never asked for.
+ *
+ * Checking that the preloaded file was *requested* proves nothing, because a preload always
+ * issues its own request. The real invariant is that some @font-face rule the page actually
+ * loaded names that exact URL.
+ */
+test('every preloaded font is one a loaded @font-face actually names', async ({ page }, info) => {
+  test.skip(info.project.name !== 'desktop', 'one check is enough');
+
+  const warnings: string[] = [];
+  page.on('console', m => { if (m.type() === 'warning') warnings.push(m.text()); });
+
+  await page.goto('/', { waitUntil: 'load' });
+  await page.evaluate(() => document.fonts.ready);
+
+  const { preloaded, declared } = await page.evaluate(() => {
+    const abs = (u: string, base: string) => new URL(u, base).pathname;
+    const preloaded = [...document.querySelectorAll('link[rel="preload"][as="font"]')]
+      .map(l => abs((l as HTMLLinkElement).href, location.href));
+    const declared: string[] = [];
+    for (const sheet of [...document.styleSheets]) {
+      let rules: CSSRuleList;
+      try { rules = sheet.cssRules; } catch { continue; }   // cross-origin sheet
+      // A url() inside CSS resolves against the stylesheet, not the document.
+      const base = sheet.href ?? location.href;
+      for (const rule of [...rules]) {
+        if (rule.constructor.name !== 'CSSFontFaceRule') continue;
+        const src = (rule as CSSFontFaceRule).style.getPropertyValue('src');
+        for (const m of src.matchAll(/url\(["']?([^"')]+)["']?\)/g)) declared.push(abs(m[1]!, base));
+      }
+    }
+    return { preloaded, declared };
+  });
+
+  expect(preloaded.length, 'the clock face should be preloaded (BRIEF §7.4)').toBeGreaterThan(0);
+  expect(declared.length, 'no @font-face rules were readable').toBeGreaterThan(0);
+  for (const p of preloaded) {
+    expect(declared, `preloaded ${p}, but no loaded @font-face names it`).toContain(p);
+  }
+
+  // The browser emits its own complaint a few seconds after load; give it time to arrive.
+  await page.waitForTimeout(3500);
+  expect(warnings.filter(w => /preload/i.test(w)), 'browser flagged an unused preload').toEqual([]);
+});

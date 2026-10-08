@@ -1,5 +1,6 @@
 /* Tandem global styles. Every value comes from the design tokens (DESIGN.md); nothing new here. */
-@import url("/fonts/fonts.css");
+/* The font faces are linked from index.html, not imported here: importing them makes the
+   bundler emit a second, hashed copy of every file, which the preload then cannot name. */
 
 :root {
   --page: #ECE6D8;
