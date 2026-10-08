@@ -1,6 +1,6 @@
 # Bughouse: Build Brief
 
-Status: **v2.1, 2026-10-07.** Design direction decided (Club table). Rewritten after a line-by-line ambiguity audit and given a final consistency pass; see the changelog at the end.
+Status: **v2.4, 2026-10-07. Built, tested and reviewed.** The product described here exists: see `README.md` to run it. Sections 3 to 8 are the contract the code implements; where building it proved a section wrong, the section was corrected and the correction recorded in the changelog at the end.
 Working title: **Tandem** (placeholder, §14).
 
 Reading guide: "must" is a requirement; "default" is a decision the user may reverse; every number in this document is a decision, not a suggestion.

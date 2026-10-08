@@ -46,15 +46,15 @@ Tandem is an online two-player bughouse chess site where each player controls bo
 ## Status at a glance
 | Area | State |
 |---|---|
-| Brief | v2.1, complete, no open questions |
+| Brief | v2.4, complete, no open questions |
 | Visual direction | **Club table**, decided 2026-10-07 |
 | Tokens, fonts, pieces, licences | Done and verified (`design/`, `THIRD_PARTY.md`) |
 | Rules engine (M1) | Done. Run for this compilation: **{n_tests} tests passing** ({n_files} files) |
-| Local prototype (M2) | Not started; next |
-| Server, UI, replay, hardening (M3 to M6) | Not started |
-| Runtime dependencies | None yet; each is licence-checked when added |
+| Server, client, replay, spectators, rules page (M2 to M5) | Done and reviewed |
+| Hardening (M6) | Accessibility, performance and licences verified; see §9 |
+| Dependencies | Two shipped (Svelte, ws), both MIT; all recorded in `THIRD_PARTY.md` |
 
-![The game screen in the Club table design, rendered from design/preview.html with the real fonts, pieces and tokens. The viewer is Team White-A: White at the bottom of Board A, Black at the bottom of Board B. Board B's running clock is in the low-time state.](design/preview.png)
+![The game screen as built, captured from the running application at 1280 px. The viewer is Team White-A: White at the bottom of Board A, Black at the bottom of Board B. The spine between the boards is where a captured piece crosses to the partner reserve.](shots/desktop-game.png)
 
 # Part 1. Build brief
 
@@ -96,6 +96,10 @@ Test run for this compilation: {n_files} files, {n_tests} tests, all passing.
 | `design/pieces/` | Cburnett SVG piece set (12 files) |
 | `design/preview.html`, `design/preview.png` | Rendered reference of the game screen using the tokens |
 | `packages/engine/` | Rules engine (TypeScript) and its tests |
+| `packages/server/` | Authoritative room, clocks and protocol; Node and Durable Object adapters |
+| `packages/web/` | Svelte 5 client |
+| `e2e/` | Playwright specs: gameplay, flows, layout, accessibility, performance |
+| `shots/` | Screenshots of every screen at three widths |
 | `tools/build_master.py` | Rebuilds this document |
 | `gate1/` | Archived style tiles (three directions) and the font test page |
 """

@@ -12,54 +12,54 @@
 | &nbsp;&nbsp;&nbsp;4. Product scope | 9 |
 | &nbsp;&nbsp;&nbsp;5. Interaction design | 10 |
 | &nbsp;&nbsp;&nbsp;6. Technical architecture | 11 |
-| &nbsp;&nbsp;&nbsp;7. Design: "Club table" (decided 2026-10-07) | 12 |
-| &nbsp;&nbsp;&nbsp;8. Information architecture | 14 |
-| &nbsp;&nbsp;&nbsp;9. Quality bars | 14 |
+| &nbsp;&nbsp;&nbsp;7. Design: "Club table" (decided 2026-10-07) | 13 |
+| &nbsp;&nbsp;&nbsp;8. Information architecture | 15 |
+| &nbsp;&nbsp;&nbsp;9. Quality bars | 15 |
 | &nbsp;&nbsp;&nbsp;10. Anti-slop checklist | 15 |
 | &nbsp;&nbsp;&nbsp;11. Milestones and exit criteria | 16 |
 | &nbsp;&nbsp;&nbsp;12. Approval gates | 16 |
-| &nbsp;&nbsp;&nbsp;13. Risks | 16 |
-| &nbsp;&nbsp;&nbsp;14. Decisions on previously open points (final; reversible on request) | 16 |
+| &nbsp;&nbsp;&nbsp;13. Risks | 17 |
+| &nbsp;&nbsp;&nbsp;14. Decisions on previously open points (final; reversible on request) | 17 |
 | &nbsp;&nbsp;&nbsp;15. References | 17 |
 | &nbsp;&nbsp;&nbsp;Changelog | 17 |
-| **Part 2. Design system** | 18 |
-| &nbsp;&nbsp;&nbsp;Principle | 18 |
-| &nbsp;&nbsp;&nbsp;Surfaces | 18 |
-| &nbsp;&nbsp;&nbsp;Colour | 18 |
-| &nbsp;&nbsp;&nbsp;Type | 18 |
-| &nbsp;&nbsp;&nbsp;Components | 18 |
-| &nbsp;&nbsp;&nbsp;Motion | 18 |
-| &nbsp;&nbsp;&nbsp;Copy | 18 |
-| &nbsp;&nbsp;&nbsp;Rejection checklist (reference: wpbeaverbuilder.com/avoid-ai-slop-in-web-design) | 19 |
-| &nbsp;&nbsp;&nbsp;Pieces and assets | 19 |
-| **Appendices** | 20 |
-| &nbsp;&nbsp;&nbsp;Appendix A. Design tokens (verbatim from `design/tokens.css`) | 20 |
-| &nbsp;&nbsp;&nbsp;Appendix B. Rules engine | 20 |
-| &nbsp;&nbsp;&nbsp;Appendix C. Third-party licences | 21 |
-| &nbsp;&nbsp;&nbsp;Appendix D. File inventory | 23 |
+| **Part 2. Design system** | 20 |
+| &nbsp;&nbsp;&nbsp;Principle | 20 |
+| &nbsp;&nbsp;&nbsp;Surfaces | 20 |
+| &nbsp;&nbsp;&nbsp;Colour | 20 |
+| &nbsp;&nbsp;&nbsp;Type | 20 |
+| &nbsp;&nbsp;&nbsp;Components | 20 |
+| &nbsp;&nbsp;&nbsp;Motion | 21 |
+| &nbsp;&nbsp;&nbsp;Copy | 21 |
+| &nbsp;&nbsp;&nbsp;Rejection checklist (reference: wpbeaverbuilder.com/avoid-ai-slop-in-web-design) | 21 |
+| &nbsp;&nbsp;&nbsp;Pieces and assets | 21 |
+| **Appendices** | 22 |
+| &nbsp;&nbsp;&nbsp;Appendix A. Design tokens (verbatim from `design/tokens.css`) | 22 |
+| &nbsp;&nbsp;&nbsp;Appendix B. Rules engine | 23 |
+| &nbsp;&nbsp;&nbsp;Appendix C. Third-party licences | 23 |
+| &nbsp;&nbsp;&nbsp;Appendix D. File inventory | 25 |
 
 # Overview
 
 Tandem is an online two-player bughouse chess site where each player controls both boards, with one clock per board.
 
-**Compiled 2026-10-07** from the project files. This is a read-only compilation; edit the source files (`BRIEF.md`, `DESIGN.md`, `THIRD_PARTY.md`, `design/tokens.css`), then rebuild with `python3 tools/build_master.py`.
+**Compiled 2026-10-08** from the project files. This is a read-only compilation; edit the source files (`BRIEF.md`, `DESIGN.md`, `THIRD_PARTY.md`, `design/tokens.css`), then rebuild with `python3 tools/build_master.py`.
 
 ## Status at a glance
 | Area | State |
 |---|---|
-| Brief | v2.1, complete, no open questions |
+| Brief | v2.4, complete, no open questions |
 | Visual direction | **Club table**, decided 2026-10-07 |
 | Tokens, fonts, pieces, licences | Done and verified (`design/`, `THIRD_PARTY.md`) |
-| Rules engine (M1) | Done. Run for this compilation: **49 tests passing** (3 files) |
-| Local prototype (M2) | Not started; next |
-| Server, UI, replay, hardening (M3 to M6) | Not started |
-| Runtime dependencies | None yet; each is licence-checked when added |
+| Rules engine (M1) | Done. Run for this compilation: **81 tests passing** (5 files) |
+| Server, client, replay, spectators, rules page (M2 to M5) | Done and reviewed |
+| Hardening (M6) | Accessibility, performance and licences verified; see §9 |
+| Dependencies | Two shipped (Svelte, ws), both MIT; all recorded in `THIRD_PARTY.md` |
 
-![The game screen in the Club table design, rendered from design/preview.html with the real fonts, pieces and tokens. The viewer is Team White-A: White at the bottom of Board A, Black at the bottom of Board B. Board B's running clock is in the low-time state.](design/preview.png)
+![The game screen as built, captured from the running application at 1280 px. The viewer is Team White-A: White at the bottom of Board A, Black at the bottom of Board B. The spine between the boards is where a captured piece crosses to the partner reserve.](shots/desktop-game.png)
 
 # Part 1. Build brief
 
-Status: **v2.1, 2026-10-07.** Design direction decided (Club table). Rewritten after a line-by-line ambiguity audit and given a final consistency pass; see the changelog at the end.
+Status: **v2.4, 2026-10-07. Built, tested and reviewed.** The product described here exists: see `README.md` to run it. Sections 3 to 8 are the contract the code implements; where building it proved a section wrong, the section was corrected and the correction recorded in the changelog at the end.
 Working title: **Tandem** (placeholder, §14).
 
 Reading guide: "must" is a requirement; "default" is a decision the user may reverse; every number in this document is a decision, not a suggestion.
@@ -195,7 +195,7 @@ The game ends at the first of these events:
 - At most one offer is pending. After a declined or expired offer, the same human may not offer again for 60 s.
 
 ### 3.7 Clocks
-- Four time banks, one per seat. On each board only the seat to move has a running clock, so at most two clocks run at once (one per board), and none run on a frozen board.
+- Four time banks, one per seat. On each board only the seat to move has a running clock, so at most two clocks run at once, one per board. A frozen board (§3.5) is frozen in position only: the side to move there keeps burning its clock and will flag unless a piece reaches it.
 - **Time control** (set by the host, default 5+0): base 1 to 30 minutes in whole minutes, applied to **each of the four seats**; increment 0 to 10 s in whole seconds. Presets: 1+0, 2+0, 3+0, 5+0, 10+0, 3+2, and custom. Standard bughouse has no increment; the default has none.
 - **Increment:** Fischer. After each accepted action by a seat, add the increment to that seat's time bank, applied on the same board's clock. Not added on a flag.
 - Time spent pending, stuck or deciding still runs.
@@ -259,8 +259,9 @@ Two boards side by side, A left and B right, joined by a **spine** `44 px` wide.
 
 ### 5.3 Layout, smaller viewports
 - **600 to 1099 px wide:** boards stay side by side; strips and the spine shrink; reserves go to a single row.
-- **Under 600 px, portrait:** boards are **stacked** (A above B) with the spine horizontal between them. Board size = `min(100vw − 16 px, (100dvh − 40 px header − 4 × 44 px strips − 8 px spine − safe-area) / 2)`. Strips are 44 px with a 28 px clock. On a 390 × 844 phone with a 34 px bottom safe-area inset this is about 293 px, or **36 px squares** (about 310 px with no inset); the naive stacked layout would be 1,111 px tall, so the formula is required.
-- **Minimum square size is 34 px.** If the formula gives less (for example 360 × 640), switch to **focus mode**: one board at full width and the other as a 22 px-square mini board, both with full clocks and reserves visible; tapping the mini board swaps which one is large. Both remain fully playable.
+- **Under 600 px, portrait:** boards are **stacked** (A above B) with the spine horizontal between them. The height budget is measured at runtime: the viewport, less the board area's offset from the top of the document, less the status line, which must stay visible while playing. The controls below it may fall under the fold on a short screen. Measuring from the *document* top matters: a viewport-relative measurement changes when the page scrolls and would resize the boards mid-game.
+- **Minimum square size is 34 px.** When two stacked boards cannot both reach it, switch to **focus mode**: the board you are playing takes the full width and the other becomes a 144 px mini board, both keeping their clocks and reserves; tapping the mini board swaps them. A 2 px hysteresis band stops the layout flipping back and forth at the boundary.
+- **Measured result.** On a 390 × 844 phone this is focus mode: the played board gets **44 px squares** and the mini board 18 px. An earlier draft of this section claimed two full boards at 36 px squares on the same phone; that arithmetic assumed a 40 px header and nothing below the boards, and does not survive a real status line, move line and controls. Two full boards at 34 px squares need 744 px of vertical space before any chrome, so on a phone focus mode is the normal case, not the exception. `e2e/layout.spec.ts` asserts the floor at every width.
 - **Phone landscape:** boards side by side, sized by height with the same 34 px floor.
 - Drag and tap targets are never smaller than the squares. Drops: drag from the reserve, or tap a reserve piece and then a square.
 
@@ -312,9 +313,11 @@ Source of truth: `packages/engine`. Shape as implemented:
 
 ### 6.4 Protocol
 Messages are JSON, schema-validated on both sides, each server message carrying a monotonically increasing `seq`.
-- Client → server: `join{name, seatToken?}`, `setup{timeControl, team}` (host only, before Ready), `ready{value}`, `action{board, action}` (move: `from,to,promo?`; drop: `piece,to`), `resign`, `drawOffer`, `drawAccept`, `drawDecline`, `rematch`, `ping{t}`.
+- Client → server: `join{name, seatToken?}`, `claimWin`, `setup{timeControl, team}` (host only, before Ready), `ready{value}`, `action{board, action}` (move: `from,to,promo?`; drop: `piece,to`), `resign`, `drawOffer`, `drawAccept`, `drawDecline`, `rematch`, `ping{t}`.
 - Server → client: `snapshot{full state, seq}`, `action{board, action, seq, serverTs, clocks}`, `reject{reason}`, `ended{result, reason}`, `presence{seat, connected}`, `drawOffered`, `pong{t, serverTs}`.
 - Gap in `seq` → the client asks for a snapshot. Reconnect uses the same path.
+- Added during the build: `rename{name}` (client → server), so a name typed in the lobby reaches the other player; and an unsolicited `pong` used as a latency probe, which the client echoes as a `ping` so the server measures round-trip time itself rather than trusting a client-reported figure. The lag credit is capped at 150 ms either way.
+- A `joined` message is re-sent to a connection whenever its seat moves between teams — the host choosing a side, a random draw resolving, or a rematch swapping sides — so the client is never left believing it holds its old team.
 
 ### 6.5 Presence and abandonment
 - A human is **disconnected** after their last WebSocket closes. Clocks keep running.
@@ -490,6 +493,38 @@ Scripted full game: create → join → ready → opening moves on both boards �
 ---
 
 ## Changelog
+**v2.4 (2026-10-07), reviewed.** A review pass over the built code found six more defects, all fixed and all now covered by a test that fails without the fix:
+
+1. **A single `seq` counter ordered both broadcasts and per-connection messages.** Messages sent to one client (`joined`) consumed numbers the others never saw, so every client read its own stream as full of holes, asked to resync on each one, and could trip the 30-messages-a-second limiter into silence. `seq` now orders broadcasts only.
+2. **A backwards system clock charged the same time twice.** `settle` moved its reference point back with the clock, so the next call billed the overlap again. It now only ever advances.
+3. **Finished rooms were never released.** The expiry rule only covered tables nobody had joined, so a long-running process kept every game it had ever hosted. A finished room is now dropped five minutes after the last player leaves; the replay survives because the record is already in the store.
+4. **A rematch never persisted its result.** The "already saved" flag was set by the first game and never cleared, so the second game was missing from replay.
+5. **Three uses of `--alert` were decorative or identifying** rather than state: a link hover, the promoted-piece marker, and a hard-coded white on dark board coordinates. The promoted marker is now a two-tone wedge that reads on a black piece and a white one alike.
+6. **DESIGN.md's token rule could not be satisfied as written.** It demanded that nothing use a non-token value, but CSS cannot read a custom property inside a media query. The rule now states what is tokenised, names the two breakpoints, and says which sub-step geometry is intentionally inline.
+
+Also folded in: dimension tokens for the values the brief fixes by number, and an independent oracle for the mate/pending/stuck classification (a side is mated only if it could not act even holding every piece type), checked against hand-built positions for each state and across random playouts.
+
+**v2.3 (2026-10-07), built.** Spec corrections found by building it: §5.3's phone arithmetic was wrong and is replaced by the measured result (focus mode, 44 px squares on a 390 × 844 phone); §6.4 gains `rename` and a server-side latency probe; §6.4 records that seat identity is re-pushed whenever a seat moves between teams.
+
+Defects the test suites caught, all fixed:
+1. Premoves could not be composed at all: the board only generated targets on your own turn.
+2. A name typed in the lobby never reached the server, so the opponent saw `Guest####`.
+3. The `joined` reply overwrote a name the player had already typed, because the socket opens before they finish typing.
+4. The time control and team chosen on the home page were stored and then never applied to the table.
+5. The phone layout measured the board's position relative to the viewport, so scrolling the page resized the boards mid-game.
+6. The responsive size formula was computed and then never applied; both boards rendered full width and overflowed the viewport.
+7. The countdown-to-playing transition broadcast nothing; it only worked because an unrelated first-run comparison happened to force one snapshot.
+8. A client was never told when its seat moved between teams, so after a host re-seat or a rematch it believed it still held its old team.
+9. The Ready button put alert-coloured text on a dark ground and failed contrast.
+10. Clocks and reserves carried `aria-label` on plain `div`s, which ARIA prohibits; replaced with real screen-reader text.
+11. The export route's greedy pattern swallowed `.txt` and `.json` into the game id, so both downloads 400'd.
+12. The Node adapter's `close()` hung on open sockets, so the test server never shut down.
+13. The transferred piece stayed in the spine after its animation instead of clearing.
+14. The keyboard cursor was drawn on boards that did not have focus.
+15. Focus rings used `--alert`, which DESIGN.md reserves for check, pending and low time.
+
+**v2.2 (2026-10-07), build pass.** §3.7 said no clock runs on a frozen board, contradicting §3.4, §3.5 and §3.7's own "time spent pending, stuck or deciding still runs"; a stuck side could never flag. Resolved in favour of the three: the side to move always burns its clock. Added `claimWin` to the §6.4 client message list (§6.5 requires the button but the list omitted it).
+
 **v2.1 (2026-10-07), final pass.** Fixed: king listed as a possible checking piece (§3.4); phone board-size figure now states its safe-area assumption (§5.3); Gate 0 no longer claims an approval that was not given; piece licence changed from BSD (verified on one file) to CC BY-SA 3.0 (verified on all twelve); font licences verified against the google/fonts repository and the OFL texts added; heading levels corrected in the compiled master.
 
 **v2.0 (2026-10-07).** User chose Club table and asked for replacement fonts, a citation check, and an ambiguity audit. Changes:
@@ -501,7 +536,15 @@ Scripted full game: create → join → ready → opening moves on both boards �
 
 # Part 2. Design system
 
-Task-zero design record. Values live in [design/tokens.css](design/tokens.css); rendered reference in [design/preview.html](design/preview.html). Nothing in the UI may use a colour, size, space, radius or easing that is not in the tokens. Deviations need explicit approval. Decided 2026-10-07; the earlier alternates are archived in `gate1/`.
+Task-zero design record. Values live in [design/tokens.css](design/tokens.css); rendered reference in [design/preview.html](design/preview.html). Decided 2026-10-07; the earlier alternates are archived in `gate1/`.
+
+**The token rule, stated so it can actually be met.** Every colour, type size, weight, spacing step, radius, duration and easing in the UI comes from a token. So do the component dimensions the brief fixes by number: strip heights, the board badge, reserve slot sizes, the control tap target and the square floor. Three things are deliberately outside the token set, because CSS cannot express them as custom properties or because they are intrinsic to one component:
+
+- **Breakpoints.** A media query cannot read a custom property. The two in use are **600 px** (side-by-side boards become stacked) and **1100 px** (full desktop layout). Changing either means changing it in every file that uses it; there is no way around that in plain CSS.
+- **Sub-step geometry.** Values below the 4 px spacing step, such as a 2 px gap inside a reserve row or a 1 px rule, and percentage geometry inside a component (a piece at 92% of its square, the promoted mark at 26%).
+- **One-off layout maxima**, such as the lobby's reading width. These are stated inline where they apply.
+
+Anything else that is not a token is a defect. Deviations need explicit approval.
 
 ## Principle
 Every visual device must say what it does for a bughouse player, or be cut. The player's real problem is divided attention across two boards; the design's job is to make four clocks, four reserves and two positions readable at a glance.
@@ -511,7 +554,7 @@ Warm matte paper (`--page`), one slightly darker panel (`--panel`), 1 px rules (
 
 ## Colour
 - **Board identity.** A is clay (`--a-accent`, squares `--a-sq-*`); B is deep teal (`--b-accent`, squares `--b-sq-*`). Each board also has a letter badge and a fixed position (A left, B right). Colour is never the only cue.
-- **State.** `--alert` appears only for check, pending and low time. `--clock-run-bg` marks the seat whose clock is running.
+- **State.** `--alert` means *something needs your attention now*: check, pending, low time, a disconnected opponent, a rejected action, a form error, and an armed destructive button. It is never decoration, never a hover, and never used to identify a piece or a board. `--clock-run-bg` marks the seat whose clock is running.
 - Contrast measured in BRIEF §7.3.
 
 ## Type
@@ -521,7 +564,8 @@ Warm matte paper (`--page`), one slightly darker panel (`--panel`), 1 px rules (
 
 ## Components
 - **Clock strip:** badge, name, seat colour, reserve, clock. The clock is the largest text on screen. Running: dark ground. Low: solid alert ground, weight 800. No pulsing.
-- **Reserve:** pieces with count badges; the opponent's at 24 px, yours at 30 px.
+- **Reserve:** pieces with count badges; the opponent's at `--reserve-slot-opp`, yours at `--reserve-slot`.
+- **Promoted piece:** a two-tone corner wedge, so it reads on a black piece and a white one alike. Identification is shape, never colour.
 - **Spine (44 px):** capture-transfer travel in 420 ms; static highlight under reduced motion.
 - **Status line:** plain words per board.
 - **Result:** one sentence, both final boards, action list. No confetti.
@@ -547,45 +591,53 @@ Cburnett SVG set (`design/pieces/`), CC BY-SA 3.0, shown at 92% of the square. F
 @import url("./fonts/fonts.css");
 
 :root {
-  /* Surfaces and ink (light only in v1) */
-  --page:   #ECE6D8;
-  --panel:  #E3DBC9;
-  --rule:   #CFC5AE;
-  --ink:    #1E1B16;
-  --ink-2:  #5A5444;
+  --page: #ECE6D8;
+  --panel: #E3DBC9;
+  --rule: #CFC5AE;
+  --ink: #1E1B16;
+  --ink-2: #5A5444;
 
-  /* Board identity. Each board = colour + letter badge + fixed position (A left, B right). */
   --a-accent: #B5482F;  --a-sq-light: #F0E3C4;  --a-sq-dark: #BA7C52;
   --b-accent: #1F5A63;  --b-sq-light: #DDE7E2;  --b-sq-dark: #6D9696;
   --on-accent: #FFFFFF;
 
-  /* State colours. Used only for state, never decoration. */
-  --alert:        #C2410C;   /* check, pending, low time */
-  --on-alert:     #FFFFFF;
-  --clock-run-bg: #1E1B16;   /* the side whose clock is running */
-  --clock-run-ink:#ECE6D8;
-  --last-move:    rgba(232, 197, 71, .38);
+  --alert: #C2410C;
+  --on-alert: #FFFFFF;
+  --clock-run-bg: #1E1B16;
+  --clock-run-ink: #ECE6D8;
+  --last-move: rgba(232, 197, 71, .38);
 
-  /* Type */
-  --font-ui:    "Atkinson Hyperlegible Next", system-ui, sans-serif;  /* UI, body, clocks */
-  --font-title: "Zilla Slab", Georgia, serif;                          /* wordmark, page titles, result line only */
-  --fs-clock:   2.25rem;   /* 36px; 1.75rem (28px) under 640px */
-  --fs-title:   1.75rem;
-  --fs-body:    0.9375rem; /* 15px */
-  --fs-small:   0.8125rem; /* 13px; minimum text size */
-  --fw-clock:   600;
+  --font-ui: "Atkinson Hyperlegible Next", system-ui, sans-serif;
+  --font-title: "Zilla Slab", Georgia, serif;
+  --fs-clock: 2.25rem;
+  --fs-title: 1.75rem;
+  --fs-body: 0.9375rem;
+  --fs-small: 0.8125rem;
+  --fw-clock: 600;
   --fw-clock-low: 800;
 
-  /* Space (4px base) and shape */
   --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px; --s-7: 48px;
-  --radius: 2px;          /* controls, badges, clocks. Boards and panels are square. */
+  --radius: 2px;
   --spine-w: 44px;
 
-  /* Motion */
+  /* Component dimensions the brief fixes by number (BRIEF §5.2, §5.3). */
+  --strip-h: 56px;          /* seat strip, full size */
+  --strip-h-compact: 44px;  /* narrow viewports and the mini board */
+  --badge: 24px;            /* board letter badge */
+  --reserve-slot: 30px;     /* your own reserve piece */
+  --reserve-slot-opp: 24px; /* the opponent's, 80% size but always visible */
+  --control-h: 40px;        /* minimum tap target for a control */
+  --square-min: 34px;       /* below this the layout switches to focus mode */
+
+  /* A promoted piece is marked by shape, never by colour alone (BRIEF §5.6). */
+  --mark-fill: #ECE6D8;
+  --mark-stroke: #1E1B16;
+
   --t-move: 120ms;
   --t-transfer: 420ms;
   --ease-out: cubic-bezier(.2, .7, .2, 1);
 }
+
 
 @media (prefers-reduced-motion: reduce) {
   :root { --t-move: 0ms; --t-transfer: 0ms; }
@@ -614,7 +666,7 @@ Seats: A-w and B-b are one human's seats, A-b and B-w the other's.
 
 Not here yet: clock layer, flags, draw/resign (server, M3).
 
-Test run for this compilation: 3 files, 49 tests, all passing.
+Test run for this compilation: 5 files, 81 tests, all passing.
 
 ## Appendix C. Third-party licences
 
@@ -633,7 +685,34 @@ All licences below were checked on 2026-10-07 against the sources named.
 
 Attribution text for pieces (shown on /rules): "Chess pieces by Cburnett, licensed CC BY-SA 3.0 (`https://creativecommons.org/licenses/by-sa/3.0/`)."
 
-Still unchecked: runtime npm dependencies, because none exist yet (Svelte, Vite and others arrive in M2 to M3). Record each when it is added.
+### Code dependencies
+
+Versions and licences read from each package's own `package.json` on 2026-10-07.
+
+#### Shipped in the running product
+| Package | Version | Licence | Where |
+|---|---|---|---|
+| svelte | 5.57.2 | MIT | Client framework; compiled into the bundle |
+| ws | 8.22.0 | MIT | WebSocket server, Node adapter only (the Cloudflare adapter uses the platform's own sockets) |
+
+#### Build and test only (not shipped)
+| Package | Version | Licence |
+|---|---|---|
+| vite | 6.4.4 | MIT |
+| @sveltejs/vite-plugin-svelte | 5.x | MIT |
+| svelte-check | 4.7.6 | MIT |
+| typescript | 5.9.3 | Apache-2.0 |
+| vitest | 2.1.9 | MIT |
+| @playwright/test | 1.64.0 | Apache-2.0 |
+| @axe-core/playwright | 4.13.0 | MPL-2.0 |
+| @types/node, @types/ws | 22.x, 8.x | MIT |
+| chessops | 0.14.2 | GPL-3.0-or-later |
+
+**On chessops.** It is GPL-3.0-or-later and is used *only* as a test oracle: the engine's own move
+generation is compared against it in `packages/engine/test/oracle.test.ts`. It is a devDependency,
+is never imported by `packages/web` or `packages/server`, and is not present in any built artefact,
+so it does not impose the GPL on the shipped site. If that ever changes, the licence must be
+revisited before release.
 
 ## Appendix D. File inventory
 
@@ -649,5 +728,9 @@ Still unchecked: runtime npm dependencies, because none exist yet (Svelte, Vite 
 | `design/pieces/` | Cburnett SVG piece set (12 files) |
 | `design/preview.html`, `design/preview.png` | Rendered reference of the game screen using the tokens |
 | `packages/engine/` | Rules engine (TypeScript) and its tests |
+| `packages/server/` | Authoritative room, clocks and protocol; Node and Durable Object adapters |
+| `packages/web/` | Svelte 5 client |
+| `e2e/` | Playwright specs: gameplay, flows, layout, accessibility, performance |
+| `shots/` | Screenshots of every screen at three widths |
 | `tools/build_master.py` | Rebuilds this document |
 | `gate1/` | Archived style tiles (three directions) and the font test page |
