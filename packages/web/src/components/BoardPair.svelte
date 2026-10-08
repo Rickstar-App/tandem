@@ -62,6 +62,7 @@
     return () => { ro.disconnect(); window.removeEventListener('resize', measure); };
   });
 
+  // Mirrors the dimension tokens in app.css; the layout maths needs them as numbers.
   const STRIP = 44, MINI_STRIP = 34, SPINE = 44, STACKED_SPINE = 24, MINI_BOARD = 144, MIN_SQUARE = 34;
   const stacked = $derived(wrapW > 0 && wrapW < 600);
   /** Stacked: both boards must fit the viewport, so the size comes from the height available. */
@@ -192,7 +193,7 @@
     font-size: var(--fs-small);
   }
   .badge-sm {
-    width: 18px; height: 18px; display: grid; place-items: center;
+    width: calc(var(--badge) * 0.75); height: calc(var(--badge) * 0.75); display: grid; place-items: center;
     background: var(--a-accent); color: var(--on-accent); border-radius: var(--radius); font-weight: 800;
   }
   .badge-sm.b { background: var(--b-accent); }

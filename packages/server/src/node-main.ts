@@ -38,16 +38,26 @@ function getHub(id: string): Hub {
   return entry.hub;
 }
 
-// Drop idle, unjoined tables so a long-running process does not accumulate them.
-setInterval(() => {
-  const now = Date.now();
+/**
+ * Release rooms nobody is using: unjoined tables after 30 minutes, and finished games a few
+ * minutes after the last player leaves. Without the second case a long-running process keeps
+ * every game it ever hosted. The result is already in the game store, so replay still works.
+ */
+export function sweep(now = Date.now()): number {
+  let dropped = 0;
   for (const [id, e] of hubs) {
     if (e.hub.connectionCount === 0 && e.hub.room.isExpired(now)) {
       if (e.timer) clearTimeout(e.timer);
       hubs.delete(id);
+      dropped++;
     }
   }
-}, 60_000).unref?.();
+  return dropped;
+}
+setInterval(() => sweep(), 60_000).unref?.();
+
+/** Rooms currently held in memory. Exported so a test can prove the sweep actually frees them. */
+export const roomCount = () => hubs.size;
 
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',

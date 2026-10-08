@@ -434,6 +434,17 @@ Scripted full game: create → join → ready → opening moves on both boards �
 ---
 
 ## Changelog
+**v2.4 (2026-10-07), reviewed.** A review pass over the built code found six more defects, all fixed and all now covered by a test that fails without the fix:
+
+1. **A single `seq` counter ordered both broadcasts and per-connection messages.** Messages sent to one client (`joined`) consumed numbers the others never saw, so every client read its own stream as full of holes, asked to resync on each one, and could trip the 30-messages-a-second limiter into silence. `seq` now orders broadcasts only.
+2. **A backwards system clock charged the same time twice.** `settle` moved its reference point back with the clock, so the next call billed the overlap again. It now only ever advances.
+3. **Finished rooms were never released.** The expiry rule only covered tables nobody had joined, so a long-running process kept every game it had ever hosted. A finished room is now dropped five minutes after the last player leaves; the replay survives because the record is already in the store.
+4. **A rematch never persisted its result.** The "already saved" flag was set by the first game and never cleared, so the second game was missing from replay.
+5. **Three uses of `--alert` were decorative or identifying** rather than state: a link hover, the promoted-piece marker, and a hard-coded white on dark board coordinates. The promoted marker is now a two-tone wedge that reads on a black piece and a white one alike.
+6. **DESIGN.md's token rule could not be satisfied as written.** It demanded that nothing use a non-token value, but CSS cannot read a custom property inside a media query. The rule now states what is tokenised, names the two breakpoints, and says which sub-step geometry is intentionally inline.
+
+Also folded in: dimension tokens for the values the brief fixes by number, and an independent oracle for the mate/pending/stuck classification (a side is mated only if it could not act even holding every piece type), checked against hand-built positions for each state and across random playouts.
+
 **v2.3 (2026-10-07), built.** Spec corrections found by building it: §5.3's phone arithmetic was wrong and is replaced by the measured result (focus mode, 44 px squares on a 390 × 844 phone); §6.4 gains `rename` and a server-side latency probe; §6.4 records that seat identity is re-pushed whenever a seat moves between teams.
 
 Defects the test suites caught, all fixed:

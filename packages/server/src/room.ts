@@ -12,6 +12,8 @@ export const REMATCH_MS = 60_000;
 export const CLAIM_AFTER_MS = 60_000;
 export const VOID_AFTER_MS = 300_000;
 export const TABLE_EXPIRY_MS = 1_800_000;
+/** How long a finished room stays in memory after the last player leaves. */
+export const FINISHED_ROOM_TTL_MS = 300_000;
 export const LAG_CREDIT_CAP_MS = 150;
 
 export interface Seated { name: string; token: string; connected: boolean; disconnectedSince: number | null }
@@ -93,7 +95,9 @@ export class Room {
       if (dt > 0) for (const s of this.running()) this.clocks[s] = this.clocks[s] - dt;
     }
     if (credit && credit.ms > 0) this.clocks[credit.seat] = this.clocks[credit.seat] + credit.ms;
-    this.clocksAt = now;
+    // Only ever advance. If the system clock steps backwards, moving the settle point back with
+    // it would make the following settle charge the same stretch of time twice.
+    if (now > this.clocksAt) this.clocksAt = now;
   }
 
   /** Earliest moment the room must be woken for a timed transition, or null. */
@@ -114,8 +118,16 @@ export class Room {
 
   // ---- lifecycle ----------------------------------------------------------
 
-  /** An unjoined table expires after 30 minutes (BRIEF §4.1). */
+  /** When the game ended, so a finished room can be released once nobody is looking at it. */
+  endedAt: number | null = null;
+
+  /**
+   * True when this room can be dropped from memory: an unjoined table after 30 minutes
+   * (BRIEF §4.1), or a finished game once the result has had time to be read. The result
+   * itself lives in the game store, so dropping the room never loses a replay.
+   */
   isExpired(now: number): boolean {
+    if (this.phase === 'over' && this.endedAt !== null) return now - this.endedAt > FINISHED_ROOM_TTL_MS;
     if ((this.players.WA && this.players.BA) || this.ply.length) return false;
     return now - this.createdAt > TABLE_EXPIRY_MS;
   }
@@ -263,6 +275,7 @@ export class Room {
     this.settle(now);
     this.phase = 'over';
     this.result = result;
+    this.endedAt = now;
     this.drawOffer = null;
     for (const s of SEATS) if (this.clocks[s] < 0) this.clocks[s] = 0;
     return ok([{ type: 'ended', seq: ++this.seq, serverTs: now, result, room: this.snapshot(now) }]);

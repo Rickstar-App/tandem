@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { parseFen, parseSan, parseSq as S } from '@tandem/engine';
-import { Room, ABORT_MS, CLAIM_AFTER_MS, COUNTDOWN_MS, DRAW_OFFER_MS, DRAW_REOFFER_BLOCK_MS, REMATCH_MS, VOID_AFTER_MS, cleanName, validTimeControl } from '../src/room.ts';
+import { Room, ABORT_MS, CLAIM_AFTER_MS, COUNTDOWN_MS, DRAW_OFFER_MS, DRAW_REOFFER_BLOCK_MS, FINISHED_ROOM_TTL_MS, REMATCH_MS, TABLE_EXPIRY_MS, VOID_AFTER_MS, cleanName, validTimeControl } from '../src/room.ts';
 import { SeatId, Team } from '../src/types.ts';
 
 const T0 = 1_700_000_000_000;
@@ -409,5 +409,44 @@ describe('renaming in the lobby', () => {
     const { r, host } = table();
     const t = start(r);
     expect(r.rename(host, 'Late', t).ok).toBe(false);
+  });
+});
+
+describe('review findings', () => {
+  it('a backwards system clock never charges the same time twice', () => {
+    const { r } = table({ baseMin: 5, incSec: 0 });
+    const t = start(r);
+    r.tick(t + 10_000);
+    expect(r.snapshot(t + 10_000).clocks['A-w']).toBe(290_000);
+    r.tick(t + 9_000);                       // NTP steps the clock backwards
+    expect(r.snapshot(t + 9_000).clocks['A-w']).toBe(290_000);  // nothing refunded
+    r.tick(t + 11_000);                      // and nothing double-charged
+    expect(r.snapshot(t + 11_000).clocks['A-w']).toBe(289_000);
+  });
+
+  it('a finished room is released once nobody is reading it, but not before', () => {
+    const { r, host } = table();
+    const t = start(r);
+    play(r, 'A', 'e4', t + 100);
+    r.resign(host, t + 1_000);
+    expect(r.isExpired(t + 1_000)).toBe(false);
+    expect(r.isExpired(t + 1_000 + FINISHED_ROOM_TTL_MS - 1)).toBe(false);
+    expect(r.isExpired(t + 1_000 + FINISHED_ROOM_TTL_MS + 1)).toBe(true);
+  });
+
+  it('a rematch makes the room live again, so it is no longer collectable', () => {
+    const { r, host, guest } = table();
+    const t = start(r);
+    r.resign(host, t + 1_000);
+    r.requestRematch(host, t + 2_000);
+    r.requestRematch(guest, t + 3_000);
+    expect(r.isExpired(t + 3_000 + FINISHED_ROOM_TTL_MS + 1)).toBe(false);
+  });
+
+  it('a played-out table is never collected while the game is still running', () => {
+    const { r } = table();
+    const t = start(r);
+    play(r, 'A', 'e4', t + 100);
+    expect(r.isExpired(t + TABLE_EXPIRY_MS * 10)).toBe(false);
   });
 });

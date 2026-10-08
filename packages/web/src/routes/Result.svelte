@@ -35,7 +35,7 @@
   .result h1 { font-size: 1.25rem; margin-bottom: var(--s-3); }
   .row { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; }
   .btnish {
-    display: inline-flex; align-items: center; min-height: 40px;
+    display: inline-flex; align-items: center; min-height: var(--control-h);
     padding: var(--s-2) var(--s-4);
     border: 1px solid var(--rule); border-radius: var(--radius);
     text-decoration: none;

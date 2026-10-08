@@ -35,22 +35,22 @@
     align-items: center;
     gap: var(--s-3);
     padding: var(--s-2) 0;
-    min-height: 56px;
+    min-height: var(--strip-h);
   }
   .who { display: flex; align-items: center; gap: var(--s-2); min-width: 0; }
   .badge {
-    flex: none; width: 24px; height: 24px; display: grid; place-items: center;
+    flex: none; width: var(--badge); height: var(--badge); display: grid; place-items: center;
     background: var(--a-accent); color: var(--on-accent);
     border-radius: var(--radius); font-weight: 800; font-size: var(--fs-small);
   }
   .badge.b { background: var(--b-accent); }
   .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 14ch; }
   .away { color: var(--alert); font-weight: 800; }
-  .compact { min-height: 34px; gap: var(--s-2); font-size: var(--fs-small); }
+  .compact { min-height: var(--strip-h-compact); gap: var(--s-2); font-size: var(--fs-small); }
   .compact :global(.clock) { font-size: 1.125rem; }
   .compact .seat { display: none; }
   @media (max-width: 1099px) {
-    .strip { min-height: 44px; gap: var(--s-2); }
+    .strip { min-height: var(--strip-h-compact); gap: var(--s-2); }
     .name { max-width: 9ch; }
     .seat { display: none; }
   }

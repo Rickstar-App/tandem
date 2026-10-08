@@ -93,7 +93,7 @@ export class Hub {
       const team = this.room.teamByToken(c.token);
       if (team === c.lastTeam) continue;
       c.lastTeam = team;
-      this.send(c, { type: 'joined', team, seatToken: c.token, name: c.name, seq: ++this.room.seq });
+      this.send(c, { type: 'joined', team, seatToken: c.token, name: c.name });
     }
   }
 
@@ -188,10 +188,10 @@ export class Hub {
     if (res.team) {
       c.token = res.token ?? this.room.players[res.team]!.token;
       c.lastTeam = res.team;
-      this.send(c, { type: 'joined', team: res.team, seatToken: c.token, name: res.name, seq: ++this.room.seq });
+      this.send(c, { type: 'joined', team: res.team, seatToken: c.token, name: res.name });
     } else {
       c.spectator = true;
-      this.send(c, { type: 'joined', team: null, name: res.name, seq: ++this.room.seq });
+      this.send(c, { type: 'joined', team: null, name: res.name });
     }
     this.emit(res.events);
     this.broadcastSnapshot();
@@ -229,6 +229,7 @@ export class Hub {
     // The countdown ends without any client message, so it always needs a wake-up.
     if (this.room.phase === 'countdown') { this.reschedule(); return; }
     if (this.room.phase === 'over' && !this.saved) { this.saved = true; void this.persist(); }
+    else if (this.room.phase !== 'over' && this.saved) this.saved = false; // a rematch starts a new game to save
     this.reschedule();
   }
 

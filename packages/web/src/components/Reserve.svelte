@@ -47,8 +47,8 @@
 </div>
 
 <style>
-  .reserve { display: flex; align-items: center; gap: 2px; min-height: 32px; flex-wrap: wrap; --slot: 24px; }
-  .mine { --slot: 30px; }
+  .reserve { display: flex; align-items: center; gap: 2px; min-height: 32px; flex-wrap: wrap; --slot: var(--reserve-slot-opp); }
+  .mine { --slot: var(--reserve-slot); }
   .empty { padding-inline: var(--s-1); }
   .slot {
     position: relative; width: var(--slot); height: var(--slot);

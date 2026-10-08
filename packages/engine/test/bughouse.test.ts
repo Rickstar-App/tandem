@@ -215,3 +215,71 @@ describe('invalid input is rejected', () => {
     expect(() => apply(g(KINGS), 'A', dr('q', 'a4'))).toThrow();
   });
 });
+
+describe('review probes: edges not covered above', () => {
+  it('an en passant chance expires if the other side drops instead of taking it', () => {
+    let game = g('4k3/8/8/8/3pP3/8/8/4K3 w - - 0 1', KINGS, R({ Aw: 'n' }));
+    game = apply(game, 'A', mv('e4', 'e5')).game;       // no double step; set one up properly
+    expect(game.pos.A.ep).toBe(-1);
+    let g2 = g('4k3/8/8/8/3p4/8/4P3/4K3 w - - 0 1', KINGS, R({ Ab: 'n' }));
+    g2 = apply(g2, 'A', mv('e2', 'e4')).game;           // double step past the black pawn
+    expect(g2.pos.A.ep).toBe(S('e3'));
+    expect(has(g2, 'A', mv('d4', 'e3'))).toBe(true);    // en passant is available right now
+    g2 = apply(g2, 'A', dr('n', 'h5')).game;            // black drops instead
+    expect(g2.pos.A.ep).toBe(-1);                        // the chance is gone
+    g2 = apply(g2, 'A', mv('e1', 'e2')).game;
+    expect(has(g2, 'A', mv('d4', 'e3'))).toBe(false);
+  });
+
+  it('a contact queen check is mate; the same queen one square further is only pending', () => {
+    // Queen on g7 touches the king on h8 and the bishop on b2 defends it, so Kxg7 is out.
+    // A contact check has no square between it and the king, so no drop can ever block it.
+    expect(status(g('7k/6Q1/8/8/8/8/1B6/4K3 b - - 0 1', KINGS, R({ Ab: 'qrbnp' })), 'A')).toBe('mate');
+    // Same idea with a gap: the rook checks along rank 8, so a piece dropped on b8..f8
+    // would block. Not mate, however empty the reserve is.
+    expect(status(g('R5k1/5ppp/8/8/8/8/8/4K3 b - - 0 1', KINGS, R({ Ab: '' })), 'A')).toBe('pending');
+  });
+
+  it('a pawn check cannot be blocked by any drop, so it is mate', () => {
+    // Black's own bishop and pawn seal g8 and h7; the pawn on g7 checks from contact range
+    // and the bishop on b2 defends it. A pawn check can never be interposed.
+    expect(status(g('6bk/6Pp/8/8/8/8/1B6/4K3 b - - 0 1', KINGS, R({ Ab: 'qqrrbbnn' })), 'A')).toBe('mate');
+  });
+
+  it('a dropped rook does not restore castling once the king has moved', () => {
+    let game = g('4k3/8/8/8/8/8/8/4K3 w - - 0 1', KINGS, R({ Aw: 'r' }));
+    game = apply(game, 'A', mv('e1', 'f1')).game;
+    game = apply(game, 'A', mv('e8', 'd8')).game;
+    game = apply(game, 'A', mv('f1', 'e1')).game;
+    game = apply(game, 'A', mv('d8', 'e8')).game;
+    game = apply(game, 'A', dr('r', 'h1')).game;
+    game = apply(game, 'A', mv('e8', 'd8')).game;
+    expect(has(game, 'A', mv('e1', 'g1'))).toBe(false);
+  });
+
+  it('applying an action never mutates the game it was given', () => {
+    const before = g('4k3/8/8/3p4/4P3/8/8/R3K2R w KQ - 0 1', KINGS, R({ Aw: 'n' }));
+    const snapshotA = before.pos.A.sq.map(x => (x ? `${x.c}${x.t}${x.promoted ? '~' : ''}` : '.')).join('');
+    const reserveBefore = { ...before.reserve.A.w };
+    const epBefore = before.pos.A.ep;
+    apply(before, 'A', mv('e4', 'd5'));
+    apply(before, 'A', dr('n', 'e5'));
+    apply(before, 'A', mv('e1', 'g1'));
+    const snapshotAfter = before.pos.A.sq.map(x => (x ? `${x.c}${x.t}${x.promoted ? '~' : ''}` : '.')).join('');
+    expect(snapshotAfter).toBe(snapshotA);
+    expect(before.reserve.A.w).toEqual(reserveBefore);
+    expect(before.pos.A.ep).toBe(epBefore);
+    expect(before.pos.A.castle.kingUnmoved.w).toBe(true);
+  });
+
+  it('a promoted piece that moves still reverts to a pawn when captured later', () => {
+    let game = g('4k3/P7/8/8/8/8/8/4K3 w - - 0 1');
+    game = apply(game, 'A', mv('a7', 'a8', 'r')).game;
+    game = apply(game, 'A', mv('e8', 'f7')).game;
+    game = apply(game, 'A', mv('a8', 'h8')).game;        // the promoted rook travels
+    game = apply(game, 'A', mv('f7', 'g7')).game;
+    game = apply(game, 'A', mv('h8', 'h7')).game;
+    const r = apply(game, 'A', mv('g7', 'h7'));          // king takes it
+    expect(r.transfer).toEqual({ toBoard: 'B', color: 'w', piece: 'p' });
+  });
+});

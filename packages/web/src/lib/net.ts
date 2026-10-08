@@ -22,6 +22,7 @@ export class Net {
   offset = 0;
   private offsets: number[] = [];
   lastSeq = 0;
+  private lastResyncAt = 0;
 
   constructor(private url: string, private h: NetHandlers) {}
 
@@ -53,8 +54,12 @@ export class Net {
         return;
       }
       if ('seq' in m && typeof m.seq === 'number') {
-        // A gap means we missed a broadcast; ask for the whole state rather than drift.
-        if (this.lastSeq && m.seq > this.lastSeq + 1) this.send({ type: 'resync' });
+        // A gap means we missed a broadcast, so ask for the whole state rather than drift.
+        // Throttled: one request a second, so a persistent gap can never become a flood.
+        if (this.lastSeq && m.seq > this.lastSeq + 1 && Date.now() - this.lastResyncAt > 1000) {
+          this.lastResyncAt = Date.now();
+          this.send({ type: 'resync' });
+        }
         this.lastSeq = Math.max(this.lastSeq, m.seq);
       }
       this.h.onMessage(m);

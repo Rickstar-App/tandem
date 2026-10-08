@@ -31,6 +31,19 @@
   --radius: 2px;
   --spine-w: 44px;
 
+  /* Component dimensions the brief fixes by number (BRIEF §5.2, §5.3). */
+  --strip-h: 56px;          /* seat strip, full size */
+  --strip-h-compact: 44px;  /* narrow viewports and the mini board */
+  --badge: 24px;            /* board letter badge */
+  --reserve-slot: 30px;     /* your own reserve piece */
+  --reserve-slot-opp: 24px; /* the opponent's, 80% size but always visible */
+  --control-h: 40px;        /* minimum tap target for a control */
+  --square-min: 34px;       /* below this the layout switches to focus mode */
+
+  /* A promoted piece is marked by shape, never by colour alone (BRIEF §5.6). */
+  --mark-fill: #ECE6D8;
+  --mark-stroke: #1E1B16;
+
   --t-move: 120ms;
   --t-transfer: 420ms;
   --ease-out: cubic-bezier(.2, .7, .2, 1);
@@ -58,7 +71,8 @@ h2 { font-size: 1.25rem; }
 h3 { font-size: 1.0625rem; }
 p { margin: 0 0 var(--s-3); }
 a { color: var(--ink); text-underline-offset: 2px; }
-a:hover { color: var(--alert); }
+/* --alert is reserved for state (DESIGN.md), so a hover is weight and underline, not colour. */
+a:hover { text-decoration-thickness: 2px; }
 
 :where(button, input, select, textarea) { font: inherit; color: inherit; }
 
@@ -68,7 +82,7 @@ button {
   border: 1px solid var(--ink);
   border-radius: var(--radius);
   padding: var(--s-2) var(--s-4);
-  min-height: 40px;
+  min-height: var(--control-h);
   cursor: pointer;
 }
 button:hover:not(:disabled) { background: #000; }
@@ -86,7 +100,7 @@ input[type="text"], input[type="number"], select {
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   padding: var(--s-2);
-  min-height: 40px;
+  min-height: var(--control-h);
 }
 /* Focus rings are ink: --alert is reserved for check, pending and low time (DESIGN.md). */
 input:focus-visible, button:focus-visible, select:focus-visible, a:focus-visible, [tabindex]:focus-visible {

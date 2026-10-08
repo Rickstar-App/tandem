@@ -101,7 +101,8 @@ export type ClientMsg =
   | { type: 'ping'; t: number };
 
 export type ServerMsg =
-  | { type: 'joined'; team: Team | null; seatToken?: string; name: string; seq: number }
+  /** Per-connection, so it carries no seq: seq numbers only order the broadcast stream. */
+  | { type: 'joined'; team: Team | null; seatToken?: string; name: string }
   | { type: 'snapshot'; seq: number; serverTs: number; room: RoomSnapshot }
   | { type: 'action'; seq: number; serverTs: number; ply: PlyRecord; clocksAt: number; running: SeatId[]; status: Record<Board, BoardStatus> }
   | { type: 'reject'; reason: string }

@@ -231,7 +231,7 @@
   .rank { top: 2px; left: 3px; }
   .file { bottom: 1px; right: 3px; }
   .light .coord { color: var(--accent); }
-  .dark .coord { color: #fff; }
+  .dark .coord { color: var(--on-accent); }
   .promo {
     position: absolute; inset: 0; z-index: 5;
     display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: var(--s-2);

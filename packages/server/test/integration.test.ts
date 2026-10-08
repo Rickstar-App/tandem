@@ -194,3 +194,73 @@ describe('node adapter', () => {
     await expect(new Promise((res, rej) => { ws.once('open', res); ws.once('error', rej); })).rejects.toBeTruthy();
   });
 });
+
+describe('memory lifecycle', () => {
+  it('releases a finished game once both players have gone', async () => {
+    const { sweep, roomCount } = await import('../src/node-main.ts');
+    const { FINISHED_ROOM_TTL_MS } = await import('../src/room.ts');
+    const { id, a, b } = await seatedPair();
+    const before = roomCount();
+    expect(before).toBeGreaterThan(0);
+
+    a.send({ type: 'ready', value: true });
+    b.send({ type: 'ready', value: true });
+    await a.until('snapshot', m => m.room.phase === 'playing');
+    a.send({ type: 'resign' });
+    await a.until('ended');
+    a.close(); b.close();
+    await new Promise(r => setTimeout(r, 200));
+
+    // Still held while the result is fresh, so a returning player can read it.
+    expect(sweep(Date.now())).toBe(0);
+    // Released once it has aged out.
+    const dropped = sweep(Date.now() + FINISHED_ROOM_TTL_MS + 1000);
+    expect(dropped).toBeGreaterThan(0);
+    expect(roomCount()).toBeLessThan(before);
+
+    // The replay still works after the room is gone, because the record was persisted.
+    const rec = await (await get(`/api/game/${id}`)).json();
+    expect(rec.result.reason).toBe('resign');
+  }, 20000);
+});
+
+describe('broadcast sequencing', () => {
+  it('every client sees a contiguous seq stream, so nobody resyncs needlessly', async () => {
+    const { id, a, b } = await seatedPair();
+    const w = await new Client(id).ready();
+    w.send({ type: 'join', name: 'Watcher' });
+    await w.until('joined');
+
+    a.send({ type: 'ready', value: true });
+    b.send({ type: 'ready', value: true });
+    await a.until('snapshot', m => m.room.phase === 'playing');
+
+    const { parseFen, gameFrom, parseSan } = await import('@tandem/engine');
+    const fenNow = () => {
+      const last = [...a.msgs].reverse().find(m => m.type === 'action') as Extract<ServerMsg, { type: 'action' }> | undefined;
+      return last ? last.ply.fen : a.last('snapshot')!.room.fen;
+    };
+    for (const [board, text] of [['A', 'e4'], ['A', 'e5'], ['B', 'd4'], ['B', 'd5']] as const) {
+      const f = fenNow();
+      const g = gameFrom(parseFen(f.A).pos, parseFen(f.B).pos, { A: parseFen(f.A).pockets, B: parseFen(f.B).pockets });
+      const action = parseSan(g, board, text)!;
+      const color = g.pos[board].turn;
+      const team = (board === 'A') === (color === 'w') ? 'WA' : 'BA';
+      const who = a.team === team ? a : b;
+      const n = a.msgs.filter(m => m.type === 'action').length;
+      who.send({ type: 'action', board, action });
+      await a.until('action', () => a.msgs.filter(m => m.type === 'action').length > n);
+    }
+    await new Promise(r => setTimeout(r, 300));
+
+    for (const [name, c] of [['player A', a], ['player B', b], ['watcher', w]] as const) {
+      const seqs = c.msgs.flatMap(m => ('seq' in m && typeof m.seq === 'number' ? [m.seq] : []));
+      expect(seqs.length, `${name} received no sequenced messages`).toBeGreaterThan(3);
+      const gaps = seqs.filter((s, i) => i > 0 && s !== seqs[i - 1]! + 1);
+      expect(gaps, `${name} saw a hole in its stream: ${seqs.join(',')}`).toEqual([]);
+    }
+    // Nobody was rate-limited into silence by a resync storm.
+    for (const c of [a, b, w]) expect(c.msgs.filter(m => m.type === 'reject')).toEqual([]);
+    a.close(); b.close(); w.close();
+  }, 25000);
+});
