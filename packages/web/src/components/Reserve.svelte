@@ -2,7 +2,7 @@
   import type { Color, DropType, Pocket } from '@tandem/engine';
   import Piece from './Piece.svelte';
 
-  let { pocket, color, interactive = false, selected = $bindable(null), mine = false, justGained = null }: {
+  let { pocket, color, interactive = false, selected = $bindable(null), mine = false, justGained = null, compact = false }: {
     pocket: Pocket;
     color: Color;
     interactive?: boolean;
@@ -10,6 +10,8 @@
     /** Your own reserve is drawn larger; the opponent's stays visible as tactical information. */
     mine?: boolean;
     justGained?: DropType | null;
+    /** The mini board in focus mode, where vertical space is scarce. */
+    compact?: boolean;
   } = $props();
 
   const ORDER: DropType[] = ['q', 'r', 'b', 'n', 'p'];
@@ -22,7 +24,7 @@
   }
 </script>
 
-<div class="reserve" class:mine>
+<div class="reserve" class:mine class:compact>
   <span class="sr-only">{color === 'w' ? 'White' : 'Black'} reserve</span>
   {#if !held.length}
     <span class="empty small muted">empty</span>
@@ -47,8 +49,9 @@
 </div>
 
 <style>
-  .reserve { display: flex; align-items: center; gap: 2px; min-height: 32px; flex-wrap: wrap; --slot: var(--reserve-slot-opp); }
+  .reserve { display: flex; align-items: center; gap: var(--s-1); min-height: 32px; flex-wrap: wrap; --slot: var(--reserve-slot-opp); }
   .mine { --slot: var(--reserve-slot); }
+  .compact, .compact.mine { --slot: var(--reserve-slot-mini); gap: 2px; }
   .empty { padding-inline: var(--s-1); }
   .slot {
     position: relative; width: var(--slot); height: var(--slot);
@@ -58,10 +61,10 @@
   .slot:not(:disabled):hover { border-color: var(--rule); background: var(--panel); }
   .picked { border-color: var(--ink); background: var(--panel); }
   .count {
-    position: absolute; right: -2px; bottom: -2px;
-    font-size: 11px; font-weight: 800; line-height: 1;
+    position: absolute; right: -3px; bottom: -3px;
+    font-size: 12px; font-weight: 800; line-height: 1;
     background: var(--ink); color: var(--page);
-    border-radius: 8px; min-width: 15px; height: 15px;
+    border-radius: 9px; min-width: 17px; height: 17px;
     display: grid; place-items: center; padding: 0 3px;
   }
   /* Under reduced motion the spine does not animate, so the arriving piece is highlighted instead. */

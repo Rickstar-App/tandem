@@ -16,10 +16,10 @@ export async function twoPlayers(browser: Browser, id: string, names: [string, s
   const b = await ctxB.newPage();
   await a.goto(`/t/${id}`);
   await a.getByLabel('Your name').fill(names[0]);
-  await expect(a.getByRole('heading', { name: `Table ${id}` })).toBeVisible();
+  await expect(a.locator('.lobby h1')).toBeVisible();
   await b.goto(`/t/${id}`);
   await b.getByLabel('Your name').fill(names[1]);
-  await expect(b.getByRole('heading', { name: `Table ${id}` })).toBeVisible();
+  await expect(b.locator('.lobby h1')).toBeVisible();
   return { a, b, ctxA, ctxB };
 }
 

@@ -6,7 +6,7 @@
   let {
     board, game, flipped = false, interactive = false, myColor = null,
     lastMove = null, premove = null, selected = $bindable(null), pendingDrop = null,
-    onAct, size = null, compact = false, checkSq = -1,
+    onAct, onCancel, size = null, compact = false, checkSq = -1,
   }: {
     board: Board;
     game: Game;
@@ -19,6 +19,8 @@
     /** A reserve piece picked up, awaiting a target square. */
     pendingDrop?: string | null;
     onAct?: (a: Action) => void;
+    /** Called when a click should abandon whatever is held, including a reserve piece. */
+    onCancel?: () => void;
     size?: string | null;
     compact?: boolean;
     /** Square of a king in check or pending, ringed in the alert colour (BRIEF §5.2). */
@@ -81,11 +83,20 @@
   function onSquare(sq: Sq) {
     if (!interactive) return;
     const piece = pos.sq[sq];
-    if (pendingDrop) { commit(sq); return; }
+    const mine = !!piece && myColor !== null && piece.c === myColor;
+
+    // Holding a reserve piece: a legal square places it, anything else puts it back.
+    if (pendingDrop) {
+      if (targets.has(sq)) { commit(sq); return; }
+      onCancel?.();
+      if (mine) selected = sq;      // clicking your own piece picks that up instead
+      return;
+    }
+
     if (selected !== null && targets.has(sq)) { commit(sq); return; }
     if (selected === sq) { selected = null; return; }
-    if (piece && myColor && piece.c === myColor) { selected = sq; return; }
-    selected = null;
+    if (mine) { selected = sq; return; }
+    selected = null;                // an empty or enemy square abandons the selection
   }
 
   // Keyboard square cursor (BRIEF §5.4).

@@ -181,7 +181,7 @@ test('the custom time control always shows what the table is actually set to', a
   test.skip(test.info().project.name !== 'desktop');
   const id = await newTable(page);
   await page.goto(`/t/${id}`);
-  await expect(page.getByRole('heading', { name: `Table ${id}` })).toBeVisible();
+  await expect(page.locator('.lobby h1')).toBeVisible();
 
   await page.getByRole('button', { name: '3+2', exact: true }).click();
   await expect(page.locator('.topbar')).toContainText('3+2');
@@ -201,4 +201,24 @@ test('the custom time control always shows what the table is actually set to', a
   await page.getByLabel('Increment seconds').fill('3');
   await page.getByRole('button', { name: 'Set' }).click();
   await expect(page.locator('.topbar')).toContainText('7+3');
+});
+
+test('a table is named rather than numbered, and the name is stable', async ({ page }) => {
+  test.skip(test.info().project.name !== 'desktop');
+  const id = await newTable(page);
+  await page.goto(`/t/${id}`);
+  const name = (await page.locator('.lobby h1').innerText()).trim();
+
+  // Readable, not the raw id.
+  expect(name).toMatch(/^The [A-Z]/);
+  expect(name).not.toContain(id);
+  // The topbar and the page title agree with it.
+  await expect(page.locator('.topbar')).toContainText(name);
+  expect(await page.title()).toContain(name);
+  // The id still identifies the table, so the invite link is unchanged.
+  await expect(page.getByLabel('Send this link to your opponent')).toHaveValue(new RegExp(`/t/${id}$`));
+
+  // The same table reads the same way after a reload.
+  await page.reload();
+  await expect(page.locator('.lobby h1')).toHaveText(name);
 });

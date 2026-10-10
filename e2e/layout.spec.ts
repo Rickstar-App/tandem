@@ -74,7 +74,7 @@ test('a small phone falls back to focus mode with a usable played board', async 
   for (const [p, name] of [[a, 'Ada'], [b, 'Bo']] as const) {
     await p.goto(`/t/${id}`);
     await p.getByLabel('Your name').fill(name);
-    await expect(p.getByRole('heading', { name: `Table ${id}` })).toBeVisible();
+    await expect(p.locator('.lobby h1')).toBeVisible();
   }
   await startGame(a, b);
   await a.waitForTimeout(700);

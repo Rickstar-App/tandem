@@ -28,10 +28,11 @@ Warm matte paper (`--page`), one slightly darker panel (`--panel`), 1 px rules (
 
 ## Components
 - **Clock strip:** badge, name, seat colour, reserve, clock. The clock is the largest text on screen. Running: dark ground. Low: solid alert ground, weight 800. No pulsing.
-- **Reserve:** pieces with count badges; the opponent's at `--reserve-slot-opp`, yours at `--reserve-slot`.
+- **Reserve:** pieces with count badges. Yours at `--reserve-slot` (40 px), because it is the row you drag from; the opponent's at `--reserve-slot-opp` (30 px); the glance board at `--reserve-slot-mini` (22 px). The piece you manipulate is the largest.
 - **Promoted piece:** a two-tone corner wedge, so it reads on a black piece and a white one alike. Identification is shape, never colour.
 - **Spine (44 px):** capture-transfer travel in 420 ms; static highlight under reduced motion.
 - **Status line:** plain words per board.
+- **Table name:** a table is named, not numbered. `The Rough Parlour`, derived from its id, shown in the heading, the topbar and the page title. The id stays in the URL and is never displayed.
 - **Result:** one sentence, both final boards, action list. No confetti.
 
 ## Motion

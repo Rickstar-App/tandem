@@ -450,3 +450,18 @@ describe('review findings', () => {
     expect(r.isExpired(t + TABLE_EXPIRY_MS * 10)).toBe(false);
   });
 });
+
+describe('table names', () => {
+  it('is stable for an id, and varied across ids', async () => {
+    const { tableName, tableId } = await import('../src/ids.ts');
+    expect(tableName('h27bqhex')).toBe(tableName('h27bqhex'));
+    expect(tableName('h27bqhex')).toMatch(/^The [A-Z][a-z]+ [A-Z]/);
+    // Use the same source production uses. An LCG's low bits are poor enough to
+    // make this look like a hash collision problem when it is a random-source problem.
+    const { randomFillSync } = await import('node:crypto');
+    const names = new Set<string>();
+    for (let i = 0; i < 400; i++) names.add(tableName(tableId(b => randomFillSync(b))));
+    // Collisions are harmless (the URL identifies a table) but the pool should be wide.
+    expect(names.size).toBeGreaterThan(300);
+  });
+});

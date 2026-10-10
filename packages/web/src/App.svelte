@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { tableName } from '@tandem/server';
   import { linkHandler, parse, type Route } from './lib/router.ts';
   import Home from './routes/Home.svelte';
   import Table from './routes/Table.svelte';
@@ -19,9 +20,9 @@
   $effect(() => {
     const t = route.name === 'home' ? 'Tandem — bughouse where you play both boards'
       : route.name === 'rules' ? 'Rules — Tandem'
-      : route.name === 'table' ? `Table ${route.id} — Tandem`
-      : route.name === 'replay' ? `Replay ${route.id} — Tandem`
-      : route.name === 'watch' ? `Watching ${route.id} — Tandem`
+      : route.name === 'table' ? `${tableName(route.id)} — Tandem`
+      : route.name === 'replay' ? `Replay: ${tableName(route.id)} — Tandem`
+      : route.name === 'watch' ? `Watching ${tableName(route.id)} — Tandem`
       : 'Not found — Tandem';
     document.title = t;
   });

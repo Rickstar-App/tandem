@@ -158,6 +158,7 @@
         compact={needsFocus && !big}
         size={stacked ? (big && bigSize ? `${Math.round(bigSize)}px` : `${Math.round(miniSize)}px`) : null}
         onAct={(a) => onAct?.(b, a)}
+        onCancel={() => { selectedSq[b] = null; reserveSel[b] = null; }}
       />
       <Strip
         board={b} color={botColor} name={nameFor(b, true)} connected={connectedFor(true)}

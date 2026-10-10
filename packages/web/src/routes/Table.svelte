@@ -1,6 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte';
   import { type Action, type Board, type DropType, type Game, type Sq, legal, newGame, sameAction } from '@tandem/engine';
+  import { tableName } from '@tandem/server';
   import type { ClientMsg, RoomSnapshot, SeatId, ServerMsg, Team, TimeControl } from '@tandem/server';
   import { Net, type Status } from '../lib/net.ts';
   import { getName, getSeatToken, setName, setSeatToken } from '../lib/storage.ts';
@@ -229,6 +230,31 @@
     B: premove.B ? (premove.B.kind === 'move' ? { from: premove.B.from, to: premove.B.to } : { to: premove.B.to }) : null,
   });
 
+  /**
+   * Clicking away abandons a held piece, the way putting it down on a real table would.
+   * A click inside one board is that board's own to interpret (it may be a legal square),
+   * but it still cancels anything being held on the other board.
+   */
+  function onDocClick(e: MouseEvent) {
+    const el = e.target as HTMLElement | null;
+    const section = el?.closest?.('section[aria-label^="Board "]') as HTMLElement | null;
+    const label = section?.getAttribute('aria-label') ?? '';
+    const clicked: Board | null = label.endsWith('A') ? 'A' : label.endsWith('B') ? 'B' : null;
+
+    if (clicked === null) {
+      if (selectedSq.A || selectedSq.B || reserveSel.A || reserveSel.B) {
+        selectedSq = { A: null, B: null };
+        reserveSel = { A: null, B: null };
+      }
+      return;
+    }
+    const other: Board = clicked === 'A' ? 'B' : 'A';
+    if (selectedSq[other] !== null || reserveSel[other] !== null) {
+      selectedSq = { ...selectedSq, [other]: null };
+      reserveSel = { ...reserveSel, [other]: null };
+    }
+  }
+
   function onKey(e: KeyboardEvent) {
     const tag = (e.target as HTMLElement | null)?.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
@@ -253,9 +279,9 @@
   const tcText = (tc: TimeControl) => `${tc.baseMin}+${tc.incSec}`;
 </script>
 
-<svelte:window onkeydown={onKey} />
+<svelte:window onkeydown={onKey} onclick={onDocClick} />
 
-<TopBar subtitle={room ? `Table ${id} · ${tcText(room.tc)}${myTeam ? ` · you are ${myTeam === 'WA' ? 'White-A' : 'Black-A'}` : ' · watching'}` : `Table ${id}`} />
+<TopBar subtitle={room ? `${tableName(id)} · ${tcText(room.tc)}${myTeam ? ` · you are ${myTeam === 'WA' ? 'White-A' : 'Black-A'}` : ' · watching'}` : tableName(id)} />
 
 <main class="page">
   {#if status !== 'open'}

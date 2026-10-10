@@ -35,8 +35,9 @@
   --strip-h: 56px;          /* seat strip, full size */
   --strip-h-compact: 44px;  /* narrow viewports and the mini board */
   --badge: 24px;            /* board letter badge */
-  --reserve-slot: 30px;     /* your own reserve piece */
-  --reserve-slot-opp: 24px; /* the opponent's, 80% size but always visible */
+  --reserve-slot: 40px;      /* your own: the one you drag from, so a real tap target */
+  --reserve-slot-opp: 30px;  /* the opponent's: smaller, but always legible */
+  --reserve-slot-mini: 22px; /* the glance board in focus mode, where height is scarce */
   --control-h: 40px;        /* minimum tap target for a control */
   --square-min: 34px;       /* below this the layout switches to focus mode */
 

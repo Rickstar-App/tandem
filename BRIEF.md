@@ -225,7 +225,7 @@ Two boards side by side, A left and B right, joined by a **spine** `44 px` wide.
 - **Board identity:** A and B differ by accent colour, by the letter badge, and by fixed position. Colour is never the only cue.
 - **Your move marker:** the seat that has the move on a board has its clock on a dark ground (`--clock-run-bg`). Opposite seats' clocks stay on the page ground. No other marker is used for "your turn".
 - **Check and pending marker:** the king's square carries a 3 px ring in the alert colour, and the status line under the boards names the board and state in words (e.g. "Board B: check, Black to move" or "Board A: pending, needs a blocking piece").
-- **Reserves:** pieces in a row with a count badge for counts above one. The opponent's reserve is shown at 80% size (24 px against 30 px) but is always visible, because it is tactical information.
+- **Reserves:** pieces in a row with a count badge for counts above one. Your own are 40 px, because that is the row you drag and tap from; the opponent's are 30 px, smaller but always legible, because their reserve is tactical information. The glance board in focus mode drops to 22 px, where vertical space is scarce. An earlier draft used 30 and 24, which played badly: the pieces you manipulate were the hardest to hit.
 - **Spine:** when a capture transfers a piece, the piece travels from the capturing board across the spine into the partner reserve in 420 ms (`--t-transfer`). It warns the opponent that you gained a piece. Under `prefers-reduced-motion` there is no travel: the reserve updates with a brief highlight.
 - **Move list:** a single merged, timestamped list in a collapsible panel to the right, filterable by board. Closed by default during play.
 - **Status line:** under the boards, one line per board in plain words (§7.6).
@@ -239,7 +239,7 @@ Two boards side by side, A left and B right, joined by a **spine** `44 px` wide.
 - Drag and tap targets are never smaller than the squares. Drops: drag from the reserve, or tap a reserve piece and then a square.
 
 ### 5.4 Input methods
-- **Pointer:** drag-and-drop and click-click for both moves and drops. Legal targets show as small dots.
+- **Pointer:** drag-and-drop and click-click for both moves and drops. Legal targets show as small dots. Anything that is not a legal target puts the piece back: an occupied square, an empty one, the other board, or any part of the page outside the boards. Clicking one of your own pieces while holding a reserve piece puts the reserve piece back and picks that one up instead. This matches a physical board, where setting a piece down anywhere that is not a square simply ends the attempt.
 - **Premove:** while it is not your turn on a board, you may queue **one** action there (a move, or a drop of a piece currently in the reserve). When your turn on that board begins, the client sends the queued action at once, and the server validates it normally. If rejected, the premove is dropped silently with a brief mark on the square. Cancel with Esc, right-click, or clicking the origin square.
 - **Keyboard command line:** open with `/` or Enter. Grammar: `<board> <notation>` where board is `a` or `b` (case-insensitive) and notation is the algebraic notation of §3.10, e.g. `a e4`, `b N@f3`, `a O-O`, `b e8=Q`. The board prefix may be omitted when the notation is legal on exactly one board where you hold the move; if it is legal on both, the line shows "legal on A and B, add a or b". The line autocompletes from the legal-action list. Enter submits; Esc closes.
 - **Keyboard navigation:** `Tab` cycles regions (board A, board B, reserve, command line, controls). `1` and `2` jump to board A and B. Arrow keys move the square cursor; Enter selects and then places; Esc cancels.
@@ -298,7 +298,7 @@ Messages are JSON, schema-validated on both sides, each server message carrying 
 - If **both** humans are disconnected for **5 minutes**, the game is voided: no result.
 
 ### 6.6 Identity and security
-- Table ids are 8 characters from a 32-symbol alphabet without look-alike characters (about 40 bits), unguessable and unlisted.
+- Table ids are 8 characters from a 32-symbol alphabet without look-alike characters (about 40 bits), unguessable and unlisted. The interface never shows the id: it shows a readable name derived from it (`The Rough Parlour`), which is cosmetic only. The id still lives in the URL and carries all the entropy, so nothing about guessability changes. Names may repeat; the URL is what identifies a table.
 - A seat is claimed with a random 128-bit seat token held in local storage and presented on connect. Spectators have no token and cannot send actions.
 - Rate limits per connection (30 messages per second); the server rejects any message failing schema validation.
 - No third-party trackers or analytics in v1.

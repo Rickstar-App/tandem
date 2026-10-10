@@ -1,5 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { tableName } from '@tandem/server';
   import type { ClientMsg, RoomSnapshot, Team, TimeControl } from '@tandem/server';
   import { setName } from '../lib/storage.ts';
 
@@ -63,7 +64,7 @@
     <h1>Starting in {countdown}</h1>
     <p class="muted">White moves first on both boards.</p>
   {:else}
-    <h1>Table {id}</h1>
+    <h1>{tableName(id)}</h1>
 
     <div class="seats">
       {#each ['WA', 'BA'] as const as t}

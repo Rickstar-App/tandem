@@ -24,7 +24,7 @@
     <span class="seat small muted">{color === 'w' ? 'White' : 'Black'}</span>
     {#if !connected}<span class="away small" title="Disconnected">away</span>{/if}
   </div>
-  <Reserve {pocket} {color} {interactive} bind:selected {mine} {justGained} />
+  <Reserve {pocket} {color} {interactive} bind:selected {mine} {justGained} {compact} />
   <Clock {ms} {running} {low} {label} />
 </div>
 

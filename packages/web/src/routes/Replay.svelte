@@ -1,5 +1,6 @@
 <script lang="ts">
   import { type Board, type Sq, gameFrom, newGame, parseFen } from '@tandem/engine';
+  import { tableName } from '@tandem/server';
   import type { GameRecord, SeatId } from '@tandem/server';
   import { interpolate } from '../lib/clock.ts';
   import TopBar from '../components/TopBar.svelte';
@@ -77,7 +78,7 @@
 </script>
 
 <svelte:window onkeydown={onKey} />
-<TopBar subtitle={`Replay ${id}`} />
+<TopBar subtitle={`Replay · ${tableName(id)}`} />
 
 <main class="page">
   {#if error}
