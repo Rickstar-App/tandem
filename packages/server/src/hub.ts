@@ -8,7 +8,22 @@ import { type ClientMsg, type RoomSnapshot, type ServerMsg, type Team, type Time
 
 export const MAX_MSGS_PER_SEC = 30;
 export const MAX_SPECTATORS = 50;
+/**
+ * Round-trip probe cadence while a game is running. Moves are lag-compensated from these samples,
+ * so they have to be fresh.
+ */
 export const PROBE_EVERY_MS = 5_000;
+/**
+ * And the cadence when no game is running. A lobby waiting for a friend, or a result screen left
+ * open, needs no round-trip numbers at all — only enough traffic to keep the socket and anything
+ * between it and the client from treating it as dead.
+ *
+ * This is a hosting cost, not a nicety. Every wake is a Durable Object alarm and every alarm is a
+ * billable request, so this interval is what a tab left open all day costs: at 5s it is 17,280
+ * requests a day against a 100,000/day free allowance, and operations fail rather than bill once
+ * that is gone.
+ */
+export const IDLE_PROBE_EVERY_MS = 30_000;
 const RTT_SAMPLES = 5;
 
 export interface Sock {
@@ -215,9 +230,22 @@ export class Hub {
     this.afterStateChange();
   }
 
+  /**
+   * Fresh samples only matter mid-game; see IDLE_PROBE_EVERY_MS.
+   *
+   * A countdown counts as active even though no move can be made yet. It lasts three seconds, so
+   * the fast cadence costs at most one extra wake per game, and it keeps the safety net tight
+   * across the one transition a player is actually waiting on: the wake that starts the game is
+   * driven by its own deadline, and if that were ever missed, this is how soon the room notices.
+   */
+  private probeEvery(): number {
+    const active = this.room.phase === 'playing' || this.room.phase === 'countdown';
+    return active ? PROBE_EVERY_MS : IDLE_PROBE_EVERY_MS;
+  }
+
   private probe(now: number): void {
     for (const c of this.conns) {
-      if (now - c.lastProbeAt >= PROBE_EVERY_MS) {
+      if (now - c.lastProbeAt >= this.probeEvery()) {
         c.lastProbeAt = now; c.probeTs = now;
         this.send(c, { type: 'pong', t: now, serverTs: now });
       }
@@ -236,7 +264,7 @@ export class Hub {
   private reschedule(): void {
     const now = this.deps.now();
     const d = this.room.nextDeadline(now);
-    const probeAt = this.conns.size ? now + PROBE_EVERY_MS : null;
+    const probeAt = this.conns.size ? now + this.probeEvery() : null;
     const at = d === null ? probeAt : probeAt === null ? d : Math.min(d, probeAt);
     this.deps.setTimer(at);
   }

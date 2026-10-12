@@ -56,6 +56,45 @@ now, so the reasoning does not have to be rediscovered.
       and restoring the old line fails two of them (`expected -3000 to be greater
       than 0`, `expected 0 to be greater than 0`).
 
+- [ ] **Decide what an idle open tab should cost.** Needs a decision, not code. Deployed
+      2026-10-12 on the Workers Free plan, where the limits are 100,000 requests/day
+      and 13,000 GB-s/day of duration, and *exceeding one makes further operations of
+      that type fail* until 00:00 UTC rather than billing. Failing operations here means
+      alarms, which means clocks stop flagging.
+
+      Duration is the binding constraint, because `durable-object.ts` calls
+      `server.accept()` and the docs are explicit: "Calling `accept()` on a WebSocket in
+      an Object will incur duration charges for the entire time the WebSocket is
+      connected." At the billed 0.125 GB that is 10,800 GB-s for one tab left open for a
+      day, against a 13,000 GB-s daily allowance. Two overnight tabs exhaust it.
+
+      Actual games are cheap, so this is not about usage. A 10-minute game is about 75
+      GB-s, roughly 170 games a day, and duration is shared across an object rather than
+      per connection, so a table costs the same with two players as with one. The cost is
+      entirely tabs left open while nothing is happening.
+
+      Already done: the probe cadence drops to 30s outside a live game
+      (`IDLE_PROBE_EVERY_MS`), which cut an open tab from 17,280 alarms a day to 2,880
+      and put requests comfortably inside the allowance. Verified on production that a
+      lobby socket still survives 5.5 minutes of waiting at that cadence. It does nothing
+      for duration, which accrues from the open socket itself.
+
+      Three ways out, in increasing order of work:
+
+      1. **Close idle sockets.** When the phase is `setup` or `over` and nothing has
+         arrived for a few minutes, close them; the object then evicts and duration
+         stops. Cheapest, and needs no persistence. Costs a reconnect affordance for
+         someone sitting in a lobby waiting on a friend.
+      2. **The WebSocket Hibernation API.** The actual fix — `state.acceptWebSocket()`
+         instead of `accept()`, so clients stay connected while the object is evicted and
+         duration does not accrue. It resets in-memory state, so it needs the Room to
+         rehydrate from storage: the P2 item below, which was declined for good reasons
+         that this does not change. It would also fix deploys killing live games.
+      3. **Workers Paid, about $5/mo.** 400,000 GB-s/month pools where the free tier is
+         daily, so one always-open tab is roughly 324,000 GB-s/month and fits. More to
+         the point, overage bills instead of failing, so the failure mode stops being
+         "clocks silently stop".
+
 ## P2 — before anyone plays for stakes
 
 - [ ] **Survive a server restart.** Rooms live in instance memory, so a deploy during a
