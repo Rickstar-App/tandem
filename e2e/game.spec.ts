@@ -10,9 +10,13 @@ test.describe('a full game', () => {
 
     const { a, b, ctxA, ctxB } = await twoPlayers(browser, id);
 
-    // Both seats are shown before the game starts.
-    await expect(a.getByText('Ada')).toBeVisible();
-    await expect(a.getByText('Bo')).toBeVisible();
+    // Both seats are shown before the game starts. Scoped to the lobby's seat list on purpose:
+    // a bare getByText('Bo') is a case-insensitive substring match over the whole page, so it also
+    // matched the table name in the heading whenever the generated name contained "bo"
+    // ("The Stubborn …", "… Board") and failed on strict mode at random. Not an exact match
+    // either, because your own seat reads "Ada (you)".
+    await expect(a.locator('.seats .who', { hasText: 'Ada' })).toHaveCount(1);
+    await expect(a.locator('.seats .who', { hasText: 'Bo' })).toHaveCount(1);
 
     await startGame(a, b);
 

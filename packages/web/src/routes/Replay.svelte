@@ -15,16 +15,39 @@
   let i = $state(-1); // -1 is the starting position
   let movesOpen = $state(true);
 
+  /**
+   * The server writes a finished game to storage as the game ends, so arriving here straight from
+   * the result screen can read a 404 for a game that does exist. Measured at 53-512ms against
+   * Cloudflare. So a 404 is retried briefly before it is believed; the player sees "Loading the
+   * game…" meanwhile. Any other status fails at once, and the budget is small enough that a
+   * genuinely unknown or expired link still reports itself promptly.
+   */
+  const RETRY_404_MS = [120, 240, 480, 800, 900];
+
   $effect(() => {
     let live = true;
-    fetch(`/api/game/${id}`)
-      .then(async r => {
-        if (r.status === 404) throw new Error('That game is not finished, or is older than 90 days.');
-        if (!r.ok) throw new Error('Could not load that game.');
-        return r.json() as Promise<GameRecord>;
-      })
-      .then(d => { if (live) { rec = d; i = d.ply.length - 1; } })
-      .catch(e => { if (live) error = e instanceof Error ? e.message : String(e); });
+    void (async () => {
+      for (let attempt = 0; live; attempt++) {
+        try {
+          const r = await fetch(`/api/game/${id}`);
+          if (!live) return;
+          if (r.status === 404 && attempt < RETRY_404_MS.length) {
+            await new Promise(res => setTimeout(res, RETRY_404_MS[attempt]));
+            continue;
+          }
+          if (r.status === 404) throw new Error('That game is not finished, or is older than 90 days.');
+          if (!r.ok) throw new Error('Could not load that game.');
+          const d = await r.json() as GameRecord;
+          if (!live) return;
+          rec = d;
+          i = d.ply.length - 1;
+          return;
+        } catch (e) {
+          if (live) error = e instanceof Error ? e.message : String(e);
+          return;
+        }
+      }
+    })();
     return () => { live = false; };
   });
 

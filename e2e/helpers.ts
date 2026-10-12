@@ -32,14 +32,36 @@ export async function startGame(a: Page, b: Page) {
   await expect(b.locator('.status')).toBeVisible();
 }
 
-/** Play a move through the command line, which exercises the same path as clicking. */
+/**
+ * Play a move through the command line, which exercises the same path as clicking.
+ *
+ * Waits for the server to confirm the move before returning. That matters as soon as the round
+ * trip is real: the command line parses against the position the player can actually see, so a
+ * reply typed before the previous move has arrived parses in the wrong position and is correctly
+ * refused rather than queued. Against localhost the ~1ms round trip always won that race and hid
+ * it; against a deployment three quick moves became one. The move list head carries the ply count
+ * even while collapsed, which is the cheapest confirmation signal and is board-agnostic.
+ *
+ * The count can rise by more than one from a single move, because a queued premove goes out in the
+ * same breath, so this polls for an increase rather than asserting an exact value.
+ */
 export async function typeMove(page: Page, text: string) {
   // On narrow screens the line is collapsed to leave the boards more height.
   const opener = page.getByRole('button', { name: 'Type a move' });
   if (await opener.count()) await opener.click();
+  const plies = page.locator('.movelist .head .muted');
+  const before = Number((await plies.innerText()).trim());
   const input = page.getByLabel(/Move command/);
   await input.fill(text);
   await input.press('Enter');
+  // An explicit budget: expect.poll does not inherit the configured expect timeout, and over a
+  // real network a confirmation can take noticeably longer than it does against localhost.
+  await expect
+    .poll(async () => Number((await plies.innerText()).trim()), {
+      timeout: 20_000,
+      message: `the server never confirmed "${text}" (ply count stayed at ${before})`,
+    })
+    .toBeGreaterThan(before);
 }
 
 /** The page whose turn it is on a board, by reading the status line. */

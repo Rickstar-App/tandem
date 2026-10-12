@@ -27,7 +27,10 @@ async function newTable() {
 
 function client(id) {
   const ws = new WebSocket(`${WS}/ws/${id}`);
-  const c = { ws, msgs: [], seqs: [] };
+  // `closed` is recorded so that a dropped socket reports itself as a dropped socket. Without it
+  // every wait just times out, and a disconnect is indistinguishable from the server going quiet.
+  const c = { ws, msgs: [], seqs: [], closed: null };
+  ws.on('close', (code, reason) => { c.closed = `code=${code} reason="${reason}"`; });
   ws.on('message', (d) => {
     const m = JSON.parse(d.toString());
     c.msgs.push(m);
@@ -39,9 +42,13 @@ function client(id) {
     const iv = setInterval(() => {
       const h = c.msgs.find(pred);
       if (h) { clearInterval(iv); res(h); }
+      else if (c.closed) {
+        clearInterval(iv);
+        rej(new Error(`socket closed while waiting (${c.closed})`));
+      }
       else if (Date.now() - t0 > ms) {
         clearInterval(iv);
-        rej(new Error(`timeout; last 3 = ${JSON.stringify(c.msgs.slice(-3))}`));
+        rej(new Error(`timeout after ${ms}ms; last 3 = ${JSON.stringify(c.msgs.slice(-3))}`));
       }
     }, 40);
   });
@@ -151,8 +158,8 @@ console.log('the Durable Object alarm');
     const secs = ((Date.now() - t0) / 1000).toFixed(1);
     if (end.result.reason === 'flag') ok(`a clock flagged after ${secs}s with no client input: ${end.result.text}`);
     else fail(`ended for the wrong reason: ${end.result.reason} (${end.result.text})`);
-  } catch {
-    fail('no game end within 95s — the alarm never fired');
+  } catch (e) {
+    fail(`no game end within 95s: ${e.message}`);
   }
   p1.ws.close();
 }
