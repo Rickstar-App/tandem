@@ -18,5 +18,5 @@ new_sqlite_classes = ["TandemRoom"]
 [[d1_databases]]
 binding = "DB"
 database_name = "tandem"
-database_id = "set-me-with-wrangler-d1-create-tandem"
+database_id = "b2cf315a-20c8-4a48-9380-2fb8a4814fce"
 migrations_dir = "migrations"
