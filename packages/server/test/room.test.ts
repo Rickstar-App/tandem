@@ -140,15 +140,15 @@ describe('clocks', () => {
   it('nextDeadline includes the abort deadline while no action has been made', () => {
     const { r } = table({ baseMin: 30, incSec: 0 });
     const t = start(r);
-    expect(r.nextDeadline()).toBe(t + ABORT_MS);
+    expect(r.nextDeadline(t)).toBe(t + ABORT_MS);
     play(r, 'A', 'e4', t + 1_000);
-    expect(r.nextDeadline()).toBe(t + 30 * 60_000); // back to the earliest flag
+    expect(r.nextDeadline(t + 1_000)).toBe(t + 30 * 60_000); // back to the earliest flag
   });
   it('nextDeadline tracks the earliest running flag', () => {
     const { r } = table({ baseMin: 1, incSec: 0 });
     const t = start(r);
     play(r, 'A', 'e4', t + 50_000);   // A-w down to 10s, A-b now running with 60s
-    expect(r.nextDeadline()).toBe(t + 60_000); // B-w flags first: 60s from start
+    expect(r.nextDeadline(t + 50_000)).toBe(t + 60_000); // B-w flags first: 60s from start
   });
 });
 

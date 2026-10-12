@@ -13,10 +13,18 @@
     "build": "npm run build -w @tandem/web",
     "dev:server": "TANDEM_START=1 node packages/server/src/node-main.ts",
     "dev:web": "npm run dev -w @tandem/web",
-    "start": "npm run build && TANDEM_START=1 node packages/server/src/node-main.ts"
+    "start": "npm run build && TANDEM_START=1 node packages/server/src/node-main.ts",
+    "test:worker": "npm run test:worker -w @tandem/server"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.64.0"
+  },
+  "allowScripts": {
+    "workerd@1.20261006.1": true,
+    "esbuild@0.21.5": true,
+    "esbuild@0.28.2": true,
+    "esbuild@0.25.12": true,
+    "fsevents@2.3.3": true
   }
 }

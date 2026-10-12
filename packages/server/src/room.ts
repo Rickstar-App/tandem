@@ -100,8 +100,14 @@ export class Room {
     if (now > this.clocksAt) this.clocksAt = now;
   }
 
-  /** Earliest moment the room must be woken for a timed transition, or null. */
-  nextDeadline(): number | null {
+  /**
+   * Earliest moment the room must be woken for a timed transition, or null.
+   *
+   * Every candidate below must be one that *changes state* when it is reached, so that applying
+   * it removes it from this list. Otherwise the host schedules a zero-delay timer, wakes, and is
+   * handed the same already-past moment again, forever.
+   */
+  nextDeadline(now: number): number | null {
     const cands: number[] = [];
     if (this.phase === 'countdown' && this.startAt !== null) cands.push(this.startAt);
     if (this.phase === 'playing') {
@@ -110,7 +116,11 @@ export class Room {
       if (this.drawOffer) cands.push(this.drawOffer.until);
       const dcs = (['WA', 'BA'] as Team[]).map(t => this.players[t]?.disconnectedSince ?? null);
       if (dcs.every(d => d !== null)) cands.push(Math.max(dcs[0]!, dcs[1]!) + VOID_AFTER_MS);
-      for (const d of dcs) if (d !== null) cands.push(d + CLAIM_AFTER_MS);
+      // Only while it is still ahead. Reaching it flips `claimable`, and nothing changes after
+      // that: the flag stays true until the player reconnects, which arrives as a message and
+      // broadcasts on its own. Proposing a moment that has already passed is the busy loop the
+      // contract above forbids, and on Durable Object alarms it would also bill every spin.
+      for (const d of dcs) if (d !== null && d + CLAIM_AFTER_MS > now) cands.push(d + CLAIM_AFTER_MS);
     }
     if (this.rematch) cands.push(this.rematch.until);
     return cands.length ? Math.min(...cands) : null;

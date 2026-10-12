@@ -20,17 +20,58 @@ now, so the reasoning does not have to be rediscovered.
 
 ## P1 — before this is deployed anywhere real
 
-- [ ] **Exercise the Cloudflare path.** `packages/server/src/durable-object.ts`
-      typechecks and mirrors the Node adapter, but nothing has ever run it. Run
-      `wrangler dev`, play a game through it, and add a smoke test. This is the only
-      codepath in the project with no coverage, and it is the production one.
-      *Deferred because it needs a Cloudflare account, which is the user's to create.*
+- [x] **Exercise the Cloudflare path.** Done 2026-10-12, locally in workerd via
+      `wrangler dev`, so no account was needed after all. `npm run test:worker`
+      (`packages/server/test-worker/do-check.mjs`) now covers it: the HTTP surface, a
+      two-client game with a capture transferred across boards, broadcast seq
+      contiguity, seat reclaim by token, and the alarm, proved by a 1+0 game flagging
+      on its own after 60s with nothing sent from the client. The full Playwright suite
+      also passes against the worker, since both target :8788.
+
+      It found three real bugs on first run, none of which the Node host could reveal:
+
+      1. `export const SCHEMA` aborted worker startup outright — the runtime requires
+         every named export of the entry module to be a handler or a Durable Object
+         class. It was also dead code duplicating `migrations/0001_games.sql`, so it
+         was deleted rather than moved.
+      2. An unguarded D1 read in the replay route turned a failed query into an
+         uncaught throw: a bare 500 in production, and under `wrangler dev` a stack
+         trace carrying absolute filesystem paths. It now degrades to a clean 503.
+         Verified by dropping the `games` table and re-requesting.
+      3. The claim-window busy loop below.
+
+- [x] **Stop the claim-window busy loop.** Found by the probe that `zz-probe.test.ts`
+      left behind, which asserted the pathology rather than fixing it.
+      `nextDeadline()` proposed `disconnectedSince + CLAIM_AFTER_MS` unconditionally.
+      Reaching that moment only flips `claimable`, so applying it never removed it: the
+      host scheduled `max(0, at - now)` = 0, woke immediately and was handed the same
+      past moment again, spinning until the player reconnected or a clock flagged — up
+      to half an hour on a 30+0 game. Harmless-looking on Node; on Durable Object
+      alarms every spin is a billable request.
+
+      `nextDeadline(now)` now takes the time and proposes the claim window only while
+      it is still ahead. Every other candidate already ended the game or cleared an
+      offer when reached, so each one removed itself; this was the only informational
+      deadline. `test/claim-deadline.test.ts` replaces the probe with four real tests,
+      and restoring the old line fails two of them (`expected -3000 to be greater
+      than 0`, `expected 0 to be greater than 0`).
 
 ## P2 — before anyone plays for stakes
 
 - [ ] **Survive a server restart.** Rooms live in instance memory, so a deploy during a
       game drops it. Persist the Room to Durable Object storage on each action and
       rehydrate on wake. Tolerable for a friendly game; not tolerable for a rated one.
+
+      Knowingly declined for the first deployment on 2026-10-12: the site is for people
+      who play on the spot and finish before leaving, and deploys will be rare. Worth
+      recording that on Cloudflare the exposure is narrower than it first looks. A
+      single player dropping is already safe — the other player's socket keeps the
+      object in memory, and the seat is reclaimed by token. Only a *simultaneous* drop
+      loses the game, and `VOID_AFTER_MS` (room.ts) already voids a game when both
+      players stay away, so the product treats that as a dead game regardless. What is
+      left is: every deploy kills every live game, and after an eviction `alarm()` finds
+      `this.hub` null and does nothing. The latter is not a hang — `getHub()` builds a
+      fresh `Room`, so a cold object serves an empty table at the same URL.
 - [ ] **Add observability.** Today the server logs one line at startup. No counters for
       games started, finished, flagged, aborted or abandoned; no error log. The first
       question after deploying is "is anyone playing" and there is currently no way to

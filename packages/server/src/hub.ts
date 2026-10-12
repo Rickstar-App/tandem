@@ -235,7 +235,7 @@ export class Hub {
 
   private reschedule(): void {
     const now = this.deps.now();
-    const d = this.room.nextDeadline();
+    const d = this.room.nextDeadline(now);
     const probeAt = this.conns.size ? now + PROBE_EVERY_MS : null;
     const at = d === null ? probeAt : probeAt === null ? d : Math.min(d, probeAt);
     this.deps.setTimer(at);

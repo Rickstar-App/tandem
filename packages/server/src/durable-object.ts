@@ -32,15 +32,10 @@ export class D1Store implements GameStore {
   }
 }
 
-/** Kept in sync with migrations/0001_games.sql, which is what `wrangler d1 migrations apply` runs. */
-export const SCHEMA = `
-CREATE TABLE IF NOT EXISTS games (
-  id       TEXT PRIMARY KEY,
-  ended_at INTEGER NOT NULL,
-  body     TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS games_ended_at ON games (ended_at);
-`;
+// The `games` schema lives in migrations/0001_games.sql, which is what `wrangler d1 migrations
+// apply` runs. It is deliberately not duplicated here: the Workers runtime requires every named
+// export of the entry module to be a handler or a Durable Object class, so a string export here
+// aborts worker startup outright.
 
 export class TandemRoom {
   private hub: Hub | null = null;
@@ -111,7 +106,12 @@ export default {
     if (game && req.method === 'GET') {
       if (!isTableId(game[1]!)) return json(400, { error: 'bad id' });
       if (!env.DB) return json(503, { error: 'replay storage is not configured' });
-      const rec = await new D1Store(env.DB).get(game[1]!);
+      // A read failure (unapplied migration, transient D1 error) must not surface as an uncaught
+      // throw: that yields a bare 500 in production and leaks a stack trace with absolute paths
+      // under `wrangler dev`. Replay is a side feature, so it degrades rather than erroring.
+      let rec: GameRecord | null;
+      try { rec = await new D1Store(env.DB).get(game[1]!); }
+      catch { return json(503, { error: 'replay storage is unavailable' }); }
       if (!rec) return json(404, { error: 'no such finished game' });
       if (game[2] === 'txt') return new Response(toText(rec), { headers: { 'content-type': 'text/plain; charset=utf-8', 'content-disposition': `attachment; filename="tandem-${rec.id}.txt"` } });
       if (game[2] === 'json') return new Response(toJson(rec), { headers: { 'content-type': 'application/json; charset=utf-8', 'content-disposition': `attachment; filename="tandem-${rec.id}.json"` } });
